@@ -188,3 +188,42 @@ def GetSurfaceParticle(Array,ParticleType = 'Triangle'):
                 if Get_Neighbors(Array,ij,Free=True,Border=True,ParticleType=ParticleType).__len__() != 0:
                     SurfParticle+=1
     return SurfParticle
+def Lacunar(Size, Order =1, ParticleType='Triangle'):
+    Array = Parallel(Size,ParticleType)
+    if ParticleType == 'Hexagon':
+        Ly,Lx = Array.shape[1]//2,Array.shape[0]//2
+    else:
+        Ly,Lx = Array.shape[1]//2,Array.shape[0]//2
+    if Lx%2 == 1:
+        Lx+=1
+    if Ly%2 ==1 :
+        Ly+=1
+    # initialize the list of the particle to remove
+    To_Delete = {(Lx,Ly)}
+    while To_Delete.__len__()!= 0:
+        # Stor the initial To_delete
+        #Old_To_Delete = To_Delete.copy()
+        New_Delete = set()
+        # add the neighboring ij's
+        for ij in To_Delete:
+            Array[ij] = 0
+            for neigh in Get_Lacune(ij,Order,ParticleType):
+                # if they follow two conditions :
+                # They are in the box
+                try :
+                    # They are not already empty
+                    if Array[neigh]==1:
+                        New_Delete.add(neigh)
+                except IndexError:
+                    pass
+        # Repete with the new added  one
+        To_Delete = New_Delete
+    return Array
+def Get_Lacune(ij,Order,ParticleType):
+    i,j=ij[0],ij[1]
+    if Order ==1 and ParticleType == 'Hexagon':
+        return  [(i-1,j+2),(i+1,j+1),(i+2,j-1),(i+1,j-2),(i-1,j-1),(i-2,j+1)]
+    if Order == 2 and ParticleType == 'Hexagon':
+        return [(j,j+2),(i+2,j),(i+2,j-2),(i,j-2),(i-2,j),(i-2,j+2)]
+    if Order == 3 and ParticleType == 'Hexagon':
+        return [(i-2,j+4),(i+2,j+2),(i+4,j-2),(i+2,j-4),(i-2,j-2),(i-4,j+2)]
