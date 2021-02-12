@@ -17,6 +17,7 @@ class BD:
         #for r in self.Range])
     def Get_E(self,n,P):
         if n>= self.Range.shape[0]:
+            print('Maximum aggregate size reached')
             n=-1
         DiskArray = Sh.Disk(self.Range[n],ParticleType=P.ParticleType)
         if self.Systems[n]:

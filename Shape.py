@@ -92,23 +92,27 @@ def Fiber(Width,Length,ParticleType='Triangle'):
                 Res[i,j]=1
         return Res
     elif ParticleType=='Hexagon':
-        return Fiber2(Width,Length)
+        return Fiber3(Width,Length)
 def Fiber2(W,L):
-        Res=np.array([np.zeros(L) for _ in range(W+int(L//2+0.5))])
-        for l in range(L):
-            if l%2==0:
-                Res[l//2:W+l//2,l]=1
-            else :
-                Res[l//2+1:W+l//2,l]=1
-        return np.flip(np.transpose(Res),0)
+    if W==1:
+        return Fiber4(W,L)
+    Res=np.array([np.zeros(L) for _ in range(W+int(L//2+0.5))])
+    for l in range(L):
+        if l%2==0:
+            Res[l//2:W+l//2,l]=1
+        else :
+            Res[l//2+1:W+l//2,l]=1
+    return np.flip(np.transpose(Res),0)
 def Fiber3(W,L):
-        Res=np.array([np.zeros(L) for _ in range(W+int(L//2+0.5))])
-        for l in range(L):
-            if l%2==0:
-                Res[l//2:W+l//2,l]=1
-            else :
-                Res[l//2:W+l//2,l]=1
-        return np.flip(np.transpose(Res),0)
+    if W==1:
+        return Fiber4(W,L)
+    Res=np.array([np.zeros(L) for _ in range(W+int(L//2+0.5))])
+    for l in range(L):
+        if l%2==0:
+            Res[l//2:W+l//2,l]=1
+        else :
+            Res[l//2:W+l//2,l]=1
+    return np.flip(np.transpose(Res),0)
 def Fiber4(W,L):
     Res=np.array([np.zeros(W) for _ in range(L)])
     Res[:]=1
@@ -122,7 +126,7 @@ def Disk(L,ParticleType):
     if ParticleType == 'Hexagon':
         Ly,Lx = L,L
     else:
-        Ly,Lx = L//2,L
+        Ly,Lx = L,L
     State = np.array([[1 for _ in range(Ly+1)] for _ in range(Lx+1)])
     ij0 = (Lx//2,Ly//2)
     R = Lx//4
@@ -221,9 +225,9 @@ def Lacunar(Size, Order =1, ParticleType='Triangle'):
     return Array
 def Get_Lacune(ij,Order,ParticleType):
     i,j=ij[0],ij[1]
-    if Order ==1 and ParticleType == 'Hexagon':
+    if Order ==0 and ParticleType == 'Hexagon':
         return  [(i-1,j+2),(i+1,j+1),(i+2,j-1),(i+1,j-2),(i-1,j-1),(i-2,j+1)]
-    if Order == 2 and ParticleType == 'Hexagon':
+    if Order == 1 and ParticleType == 'Hexagon':
         return [(j,j+2),(i+2,j),(i+2,j-2),(i,j-2),(i-2,j),(i-2,j+2)]
-    if Order == 3 and ParticleType == 'Hexagon':
+    if Order == 2 and ParticleType == 'Hexagon':
         return [(i-2,j+4),(i+2,j+2),(i+4,j-2),(i+2,j-4),(i-2,j-2),(i-4,j+2)]

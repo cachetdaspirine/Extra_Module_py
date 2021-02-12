@@ -79,6 +79,9 @@ libTriangle.GetSystemEnergy.argtypes=[POINTER(c_void_p)]
 libTriangle.OutputSystemSite.argtypes=[POINTER(c_void_p),c_char_p]
 libTriangle.OutputSystemSpring.argtypes=[POINTER(c_void_p),c_char_p]
 
+libTriangle.GetBulkEnergy.argtypes=[POINTER(c_void_p)]
+libTriangle.GetBulkEnergy.restype=c_double
+
 libHexagon = cdll.LoadLibrary('/home/hugo/Extra_Module_py/libHexagon.so')
 
 libHexagon.CreateSystem.restype=POINTER(c_void_p)
@@ -289,6 +292,8 @@ class System:
         else :
             self.lib.UpdateSystemEnergy(self.Adress,Arraycpp,self.Lx,self.Ly)
             self.Energy=self.lib.GetSystemEnergy(self.Adress)
+    def CheckBulkEnergy(self):
+        return self.lib.GetBulkEnergy(self.Adress)
     def PrintPerSite(self,Name='NoName.txt'):
         # output the sytem per site (easier if you wanna plot the sites).
         if self.Np<1:
