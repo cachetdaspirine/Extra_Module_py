@@ -2,6 +2,7 @@ import numpy as np
 import System as Sys
 import Shape as Sh
 
+
 class BD:
     def __init__(self,Nmax,P):
         self.Nmax = Nmax
