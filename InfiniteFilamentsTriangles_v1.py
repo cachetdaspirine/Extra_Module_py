@@ -52,7 +52,7 @@ def DetermineInfiniFilamentEnergy(k_red, k_blue, k_soft, \
     width_list = np.zeros(width_max-1)
     energy_list = np.zeros(width_max-1)
     for ind_w in range(1, width_max):
-        print(ind_w)
+        #print(ind_w)
         width = ind_w
         width_list[ind_w-1] = ind_w
         energy_list[ind_w-1] = FunctionFilamentEnergy(width, *args)
@@ -60,6 +60,6 @@ def DetermineInfiniFilamentEnergy(k_red, k_blue, k_soft, \
         ## Add surface energy per particle
         energy_list[ind_w-1] = energy_list[ind_w-1] + 2.0*J_surface/width
     ########################################################
-    return (width_list, energy_list, BulkE)  
+    return (width_list, energy_list, BulkE)
 ########################################################
 ########################################################

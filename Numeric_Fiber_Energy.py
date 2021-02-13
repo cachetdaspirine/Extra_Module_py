@@ -18,8 +18,7 @@ class BF:
                 DetermineInfiniFilamentEnergy(P.k, P.k, P.kc, \
                                               P.kA, P.kA, \
                                               P.l, \
-                                              P.epsilon, P.J, WidthMax)
-
+                                              P.epsilon, 0., WidthMax)
         self.Systems = np.array([np.empty(3,dtype=object)#np.array([
         #Sys.System(
         #Sh.Fiber(w,int(w/A),ParticleType=P.ParticleType),
@@ -63,8 +62,8 @@ class BF:
         ax.plot(self.Aspect,line(self.Aspect,popt[0],popt[1]))
         ax.scatter(self.Aspect,E)
         return fig, ax
-    def Get_E(self,w):
-        return self.energy_list[w-1]
+    def Get_E(self,w,P):
+        return self.energy_list[w-1]+2*P.J/w
     def Get_Einf(self,w,P):
         E=list()
         if w >= self.Wmax:
@@ -99,19 +98,19 @@ class BF:
         # fiber for this set of parameter
         w=1
         if P.ParticleType=='Triangle':
-            Einf1 = self.Get_E(w)
+            Einf1 = self.Get_E(w,P)
         else:
             Einf1 = self.Get_Einf(w,P)
         w+=1
         if P.ParticleType=='Triangle':
-            Einf2 = self.Get_E(w)
+            Einf2 = self.Get_E(w,P)
         else :
             Einf2 = self.Get_Einf(w,P)
         while Einf2<Einf1 :
             w+=1
             Einf1=Einf2
             if P.ParticleType=='Triangle':
-                Einf2 = self.Get_E(w)
+                Einf2 = self.Get_E(w,P)
             else :
                 Einf2 = self.Get_Einf(w,P)
             if w>=self.Wmax-1:
