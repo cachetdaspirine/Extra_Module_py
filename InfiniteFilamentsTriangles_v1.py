@@ -58,7 +58,7 @@ def DetermineInfiniFilamentEnergy(k_red, k_blue, k_soft, \
         energy_list[ind_w-1] = FunctionFilamentEnergy(width, *args)
         ###############################
         ## Add surface energy per particle
-        energy_list[ind_w-1] = energy_list[ind_w-1] + 2.0*J_surface/width
+        energy_list[ind_w-1] = energy_list[ind_w-1] + J_surface/width
     ########################################################
     return (width_list, energy_list, BulkE)
 ########################################################

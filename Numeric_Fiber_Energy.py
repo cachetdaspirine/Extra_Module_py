@@ -12,22 +12,14 @@ class BF:
     def __init__(self,WidthMax,P):
         #Make an array of system for each W
         self.Wmax = WidthMax
-        #self.Aspect = np.array([1./3.,1./5.,0.1])
+        self.Aspect = np.array([1./3.,1./5.,0.1])
         #self.Aspect = np.array([1./10.,1./50.,0.01])
         self.width_list, self.energy_list, BulkE = \
                 DetermineInfiniFilamentEnergy(P.k, P.k, P.kc, \
                                               P.kA, P.kA, \
-                                              P.l, \
+                                              1., \
                                               P.epsilon, 0., WidthMax)
-        self.Systems = np.array([np.empty(3,dtype=object)#np.array([
-        #Sys.System(
-        #Sh.Fiber(w,int(w/A),ParticleType=P.ParticleType),
-        #eps=P.epsilon,
-        #Kcoupling=P.kc,
-        #Kvol=P.kA,
-        #ParticleType=P.ParticleType)
-        #for A in self.Aspect])
-        for w in range(0,WidthMax,1)])
+        self.Systems = np.array([np.empty(3,dtype=object) for w in range(0,WidthMax,1)])
     def Np(self,W,L,P):
         if P.ParticleType=='Hexagon':
             if W ==1:
@@ -63,7 +55,7 @@ class BF:
         ax.scatter(self.Aspect,E)
         return fig, ax
     def Get_E(self,w,P):
-        return self.energy_list[w-1]+2*P.J/w
+        return self.energy_list[w-1]+P.J/w
     def Get_Einf(self,w,P):
         E=list()
         if w >= self.Wmax:
