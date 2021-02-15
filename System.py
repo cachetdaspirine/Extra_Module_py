@@ -62,7 +62,7 @@ from ctypes import c_char_p
 #output the position of the nodes site by site (a line  is  a  list  of  nodes
 #position linked to one site).
 # lib.OutputSystemSpring : same as outputsystemsite but sorted by spring
-libTriangle = cdll.LoadLibrary('/home/hugo/Extra_Module_py/libTriangle.so')
+libTriangle = cdll.LoadLibrary('libTriangle.so')
 
 libTriangle.CreateSystem.restype=POINTER(c_void_p)
 libTriangle.CreateSystem.argtypes=[POINTER(c_int) , c_int,c_int, c_double,c_double,c_double,c_double]
@@ -82,7 +82,7 @@ libTriangle.OutputSystemSpring.argtypes=[POINTER(c_void_p),c_char_p]
 libTriangle.GetBulkEnergy.argtypes=[POINTER(c_void_p)]
 libTriangle.GetBulkEnergy.restype=c_double
 
-libHexagon = cdll.LoadLibrary('/home/hugo/Extra_Module_py/libHexagon.so')
+libHexagon = cdll.LoadLibrary('libHexagon.so')
 
 libHexagon.CreateSystem.restype=POINTER(c_void_p)
 libHexagon.CreateSystem.argtypes=[POINTER(c_int) , c_int,c_int, c_double,c_double,c_double,c_double]
