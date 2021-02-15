@@ -25,7 +25,7 @@ class BF:
             if W ==1:
                 return L
             else :
-                return (W-0.5)*L
+                return (W)*L # Careful if the type of fiber
         else :
             return W*L
     def CheckInfFiber(self,w,P):
