@@ -7,6 +7,7 @@ class BD:
     def __init__(self,Nmax,P):
         self.Nmax = Nmax
         self.Range = P.HRange(Nmax)
+        self.NList = np.array([Sh.Np(Sh.Parallel(r,P.ParticleType)) for r in self.Range])
         self.Systems = np.empty(self.Range.shape[0],dtype=object)
         #self.Systems = np.array([
         #Sys.System(

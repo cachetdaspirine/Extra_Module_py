@@ -43,12 +43,14 @@ class BF:
                 ParticleType=P.ParticleType)
         for i,S in enumerate(self.Systems[w-1]):
             A = self.Aspect[i]
+            #S.PrintPerSite('k'+str(P.k)+'_kA'+str(P.kA)+'_kc'+str(P.kc)+'_A'+str(A)+'.res')
             #loop over several aspect ratio
             FiberArray = Sh.Fiber(w,int(w/A),ParticleType=P.ParticleType)
             SurfaceEnergy = Sh.SurfaceEnergy(FiberArray,J=P.J,ParticleType=P.ParticleType)
             E.append((S.Energy+SurfaceEnergy)/self.Np(w,int(w/A),P))#(w*int(w/A)))
 
         popt,pconv = curve_fit(line,self.Aspect,E)
+        #np.savetxt('Energy.txt',E)
         print('a, b = '+str(popt))
         fig,ax = plt.subplots()
         ax.plot(self.Aspect,line(self.Aspect,popt[0],popt[1]))

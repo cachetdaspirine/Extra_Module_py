@@ -42,8 +42,12 @@ class SimulToAnalytic:
     def Range(self,Nmax):
         if self.ParticleType == 'Triangle':
             #Size = int(4*(Nmax/6)**0.5+0.5)
-            Size = int(4*np.sqrt(Nmax/np.pi*0.433))+2
-            return np.arange(4,Size,4)
+            #dirty disk
+            #Size = int(4*np.sqrt(Nmax/np.pi*0.433))+2
+            #return np.arange(4,Size,4)
+            #clean disk
+            Size = self.Size(Nmax)
+            return np.arange(1,Size,1)
         elif self.ParticleType == 'Hexagon':
             #Size = int(0.5* (1+np.sqrt(1+8*Nmax)))
             #return np.arange(1,Size,1)
@@ -53,7 +57,10 @@ class SimulToAnalytic:
             return np.arange(4,Size,2)
     def Size(self,N):
         if self.ParticleType == 'Triangle':
-            return max(int(4*np.sqrt(N/np.pi*0.433))+2,1)
+            #clean disk
+            return 0.5 * ( (N/(3**0.5*np.pi))**0.5-1.5)
+            #dirty disk
+            #return max(int(4*np.sqrt(N/np.pi*0.433))+2,1)
         elif self.ParticleType== 'Hexagon' :
             def NFunc(R):
                 return (R/2-R**(1./3.))**2-N
@@ -75,7 +82,7 @@ class SimulToAnalytic:
             #return max(int(0.5* (1+np.sqrt(1+8*N))),1)
             return max(int(1./6.* (3+np.sqrt(3*(4*N-1)))),1)
 class AnalyticToSimul:
-    def __init__(self,nu=1/3,Gamma=0,l=1.,epsilon=0.1,writting = True,ParticleType='Triangle'): #here we assumed k = 1
+    def __init__(self,nu=1/3,Gamma=0.,l=1.,epsilon=0.1,writting = True,ParticleType='Triangle'): #here we assumed k = 1
         if (not isinstance(nu,float)) or (not isinstance(Gamma,float)) or (not isinstance(l,float)) or (not isinstance(epsilon,float)):
             print('nu='+str(nu))
             print('Gamma='+str(Gamma))
@@ -112,8 +119,12 @@ class AnalyticToSimul:
     def Range(self,Nmax):
         if self.ParticleType == 'Triangle':
             #Size = int(4*(Nmax/6)**0.5+0.5)
-            Size = int(4*np.sqrt(Nmax/np.pi*0.433))+2
-            return np.arange(4,Size,4)
+            #dirty disk
+            #Size = int(4*np.sqrt(Nmax/np.pi*0.433))+2
+            #return np.arange(4,Size,4)
+            #clean disk
+            Size = self.Size(Nmax)
+            return np.arange(1,Size,1)
         elif self.ParticleType == 'Hexagon':
             #Size = int(0.5* (1+np.sqrt(1+8*Nmax)))
             #return np.arange(1,Size,1)
@@ -123,7 +134,11 @@ class AnalyticToSimul:
             return np.arange(4,Size,2)
     def Size(self,N):
         if self.ParticleType == 'Triangle':
-            return max(int(4*np.sqrt(N/np.pi*0.433))+2,1)
+            #clean disk
+            #print(0.5 * ( (N/(3**0.5*np.pi))**0.5-1.5))
+            return max(1,int(0.5 * ( (N/(3**0.5*np.pi))**0.5-1.5)+0.5))
+            #dirty disk
+            #return max(int(4*np.sqrt(N/np.pi*0.433))+2,1)
         elif self.ParticleType== 'Hexagon' :
             def NFunc(R):
                 return (R/2-R**(1./3.))**2-N

@@ -59,6 +59,52 @@ def ParallelHex(size):
 # Hexagon
 #---------------------------------------------------------------
 #N = 6 * (Size/4)**2
+def Star(Size,ParticleType = 'Triangle'):
+    size = 4 * Size  # make sure size is pair
+    Array = np.full((2*size-1,size +2 ),1)
+    Array[:,0] = 0
+    Array[:,-1] = 0
+    for i in range(Array.shape[0]):
+        for j in range(1,Array.shape[1]-1):
+            if i < size//2  :
+                if j-1 < size//2 :
+                    if size//2-1-i > j-1:
+                        Array[i,j] = 0
+                else :
+                    if j-1-size//2 > i :
+                        Array[i,j] = 0
+            elif i >= (size + size//2):
+                if j-1 < size//2 :
+                    if i - size - size//2 > j-1 -1 :
+                        Array[i,j] = 0
+                else :
+                    if i-size - size//2 > size//2 -(j-1-size//2+2) :
+                        Array[i,j] = 0
+    Array[Array.shape[0]//2-size//2+3:Array.shape[0]//2+1+size//2-3,0] = 1
+    Array[Array.shape[0]//2-size//2+3:Array.shape[0]//2+1+size//2-3,-1] = 1
+    for i in range(Array.shape[0]):
+        for j in range(1,Array.shape[1]-1):
+            if i < size//2 -2 :
+                if j-1 < size//2 :
+                    if size//2-2-i == j-1:
+                        Array[i,j] = 1
+                    if size//2 -3-i == j-1 and i< size//2 -3:
+                        Array[i,j] = 1
+                else :
+                    if j-2-size//2 <= i :
+                        Array[i,j] = 1
+                    if j-3-size//2 <= i and j<=size-1 :
+                        Array[i,j] = 1
+            elif i >= (size + size//2):
+                if j-1 < size//2 :
+                    if i - size - size//2 -1 <= j-1 -1 and i >size+size//2:
+                        Array[i,j] = 1
+                    if i - size - size//2 -2 <= j-1 -1 and i >size+size//2+1:
+                        Array[i,j] = 1
+                else :
+                    if i-size//2-size < size+2-j and j < size :
+                        Array[i,j] = 1
+    return Array
 def Parallel(size,ParticleType='Triangle'):
     if ParticleType=='Triangle':
         if size <4 :
@@ -92,7 +138,7 @@ def Fiber(Width,Length,ParticleType='Triangle'):
                 Res[i,j]=1
         return Res
     elif ParticleType=='Hexagon':
-        return Fiber3(Width,Length)
+        return Fiber4(Width,Length)
 def Fiber2(W,L):
     if W==1:
         return Fiber4(W,L)
