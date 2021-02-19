@@ -8,7 +8,8 @@ class BD:
         self.Nmax = Nmax
         self.Range = P.HRange(Nmax)
         self.NList = np.array([Sh.Np(Sh.Parallel(r,P.ParticleType)) for r in self.Range])
-        self.Systems = np.empty(self.Range.shape[0],dtype=object)
+        #self.Systems = np.empty(self.Range.shape[0],dtype=object)
+        self.SystemEnergy = np.zeros(self.Range.shape[0],dtype=float)
         #self.Systems = np.array([
         #Sys.System(
         #Sh.Parallel(r,ParticleType=P.ParticleType),
@@ -21,16 +22,18 @@ class BD:
         if n>= self.Range.shape[0]:
             n=-1
         DiskArray = Sh.Parallel(self.Range[n],ParticleType=P.ParticleType)
-        if self.Systems[n]:
-            return (self.Systems[n].Energy+Sh.SurfaceEnergy(DiskArray,J=P.J,ParticleType=P.ParticleType))/Sh.Np(DiskArray)
+        #if self.Systems[n]:
+        #    return (self.Systems[n].Energy+Sh.SurfaceEnergy(DiskArray,J=P.J,ParticleType=P.ParticleType))/Sh.Np(DiskArray)
+        if self.SystemEnergy[n]:
+            return (self.SystemEnergy[n]+Sh.SurfaceEnergy(DiskArray,J=P.J,ParticleType=P.ParticleType))/Sh.Np(DiskArray)
         else :
-            self.Systems[n] =Sys.System(
+            self.SystemEnergy[n] =Sys.System(
             DiskArray,
             eps=P.epsilon,
             Kcoupling=P.kc,
             Kvol=P.kA,
-            ParticleType=P.ParticleType)
-            return (self.Systems[n].Energy+Sh.SurfaceEnergy(DiskArray,J=P.J,ParticleType=P.ParticleType))/Sh.Np(DiskArray)
+            ParticleType=P.ParticleType).Energy
+            return (self.SystemEnergy[n]+Sh.SurfaceEnergy(DiskArray,J=P.J,ParticleType=P.ParticleType))/Sh.Np(DiskArray)
     def Get_Best_Disk(self,P):
         n1 = 0
         E1 = self.Get_E(n1,P)
