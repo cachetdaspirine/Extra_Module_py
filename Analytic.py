@@ -20,7 +20,10 @@ def Ff_Analytic_Triangle(w,P):
     : P : an AnalyticToSimul or SimulToAnalytic object
     : Return the energy in bulk free energy per particle unit
     """
-    t = np.sqrt(3)/2 * P.l0/P.l * w
+    if P.ParticleType == 'Triangle':
+        t = np.sqrt(3)/2 * P.l0/P.l * w
+    else :
+        t = P.l0/P.l * w
     nu = P.nu
     Gamma = P.Gamma
     return P.FB*Ff_Analytic(t,Gamma,nu)
@@ -44,9 +47,13 @@ def FDisk_Analytic_Triangle(N,P,LowerBound = True):
     : P : an AnalyticToSimul or SimulToAnalytic object
     : LowerBound : precise wether or not you want the LowerBound closest disk, or upperbound
     """
-    rmin = np.sqrt(N)*P.l0/(P.l*2*np.sqrt(2))
-    rmax = np.sqrt(N/6)*P.l0/P.l
-    if LowerBound:
-        return FDisk_Anlytic(rmin,rmin,P.Gamma,P.nu)*P.FB
+    if P.ParticleType == 'Triangle':
+        rmin = np.sqrt(N)*P.l0/(P.l*2*np.sqrt(2))
+        rmax = np.sqrt(N/6)*P.l0/P.l
+        if LowerBound:
+            return FDisk_Anlytic(rmin,rmin,P.Gamma,P.nu)*P.FB
+        else :
+            return FDisk_Anlytic(rmin,rmax,P.Gamma,P.nu)*P.FB
     else :
-        return FDisk_Anlytic(rmin,rmax,P.Gamma,P.nu)*P.FB
+        r = 0.5+((9+12*(N-1))**0.5-3)/6.*P.l0/P.l
+        return FDisk_Anlytic(r,r,P.Gamma,P.nu)*P.FB

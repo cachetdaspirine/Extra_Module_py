@@ -4,6 +4,7 @@
 import time
 import numpy as np
 from scipy.optimize import fmin_cg
+from scipy.optimize import minimize
 import math
 ########################################################
 ########################################################
@@ -225,6 +226,8 @@ def InitialXYlist_SecondConfiguation(width, l0_0, l0_soft):
 ########################################################
 ########################################################
 def FunctionFilamentEnergy_SecondConfiguation(width, *args):
+    #print('type 2')
+    #print(width)
     ###############
     (k_red, k_blue, k_soft, \
      k_Area_red, k_Area_blue, \
@@ -235,15 +238,19 @@ def FunctionFilamentEnergy_SecondConfiguation(width, *args):
     xy_list_0 = InitialXYlist_SecondConfiguation(width, l0_0, l0_soft)
     xy_dof_0 = DOFfromXY_SecondConfiguation(xy_list_0)
     ###############
-    res = fmin_cg(CalcualteTotalEnergy_SecondConfiguation, xy_dof_0, \
-                  fprime=gradf_f_SecondConfiguation, \
-                  args=args, full_output=1, disp=0)
-    res_min = res[0]
+    #res = fmin_cg(CalcualteTotalEnergy_SecondConfiguation, xy_dof_0, \
+     #              fprime=gradf_f_SecondConfiguation, \
+    #              args=args, full_output=1, disp=0)
+    res = minimize(fun = CalcualteTotalEnergy_SecondConfiguation, x0 = xy_dof_0, \
+                    method='BFGS',
+                    jac=gradf_f_SecondConfiguation, \
+                    args=args)
+    res_min = res.x
     ###############
-    if res[4]!=0:
+    if not res.success:
         print('\n')
         print('Error: There is an error in the filament energy calculations of the second structure')
-        print('Error code is: %d' %res[4])
+        print('Error code is: %d' %res)
         print('\n')
     ###############
     en_w_temp = CalcualteTotalEnergy_SecondConfiguation(res_min, *args)

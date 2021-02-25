@@ -220,7 +220,7 @@ class System:
         self.Adress=self.lib.CreateSystem(Arraycpp,self.Lx,self.Ly,eps,Kmain,Kcoupling,Kvol) # create the system, all the argument are require here !!!!
         #--------------------Store the value of the Energy------------------
         self.Energy=self.lib.GetSystemEnergy(self.Adress) # store the value of the Energy (get energy only returns a number and doesn't reactualize the equilibrium of the system).
-        self.MAP = cm2
+        self.MAP = cm
     def Copy(self,old_system):
         self.ParticleType = old_cluster.ParticleType
         if self.ParticleType=='Triangle':
@@ -363,8 +363,8 @@ class System:
             Y2=np.append(Y2,ligne[3])
             C0=np.append(C0,ligne[5])
             C1=np.append(C1,((ligne[2]-ligne[0])**2+(ligne[3]-ligne[1])**2)**0.5)
-        Colorlim=(min(C0),max(C0))
-        #Colorlim=(-max(abs(C1-C0)),max(abs(C1-C0)))
+        #Colorlim=(min(C0),max(C0))
+        Colorlim=(min(((C1-C0)/(C0))),max(((C1-C0)/(C0))))
         #if eps != 0:
         #    Colorlim = (0,eps)
         XC=sum(X1)/X1.shape[0]
