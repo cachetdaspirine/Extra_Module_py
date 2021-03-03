@@ -130,7 +130,7 @@ def Np(Array):
 #---------------------------------------------------------------
 # Make a fiber of certain width, and length.
 #---------------------------------------------------------------
-def Fiber(Width,Length,ParticleType='Triangle'):
+def Fiber(Width,Length,ParticleType='Triangle',type=1):
     if ParticleType=='Triangle':
         Res=np.array([np.zeros(Width+2,dtype=int) for _ in range(Length+2)])
         for i in range(1,Length+1):
@@ -138,7 +138,10 @@ def Fiber(Width,Length,ParticleType='Triangle'):
                 Res[i,j]=1
         return Res
     elif ParticleType=='Hexagon':
-        return Fiber4(Width,Length)
+        if type == 1:
+            return Fiber4(Width,Length)
+        elif type == 2:
+            return Fiber3(Width,Length)
 def Fiber2(W,L):
     if W==1:
         return Fiber4(W,L)
