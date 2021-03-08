@@ -28,7 +28,8 @@ class SimulToAnalytic:
             self.FB=self.fb*np.sqrt(3)/4 * (1+self.epsilon)**2#Bulk free energy per particle
             self.Gamma=2*self.J/(self.l*self.l0*self.fb*(1+self.nu)) # rescaled surface tension
         elif self.ParticleType == 'Hexagon':
-            self.FB = self.fb * 3*np.sqrt(3)/2*(1./3.+epsilon**2)
+            self.FB = self.fb*np.sqrt(3)/2*(1+self.epsilon)**2
+            #self.FB = self.fb * 3*np.sqrt(3)/2*(1./3.+epsilon**2)
             self.Gamma=2*self.J/(self.l*(1+self.nu)*self.fb*(1/3+epsilon**2)**0.5)
         if writting:
             print('nu='+str(self.nu))

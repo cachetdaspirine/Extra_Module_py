@@ -64,8 +64,8 @@ def RandomPositions(seed_temp):
     ##########################
     np.random.seed(seed_temp)
     ## Two random epsilon
-    epsilon_1 = np.random.rand(1)/10.0
-    epsilon_2 = np.random.rand(1)/10.0
+    epsilon_1 = 0.1#np.random.rand(1)/10.0
+    epsilon_2 = 0.#np.random.rand(1)/10.0
     ## Regular Hexagon
     ell2 = 1.0 + epsilon_1
     q0_vec = np.zeros(12)

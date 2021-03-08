@@ -30,6 +30,9 @@ libRand.GetSystemEnergy.argtypes = [POINTER(c_void_p)]
 
 libRand.OutputSystemSite.argtypes = [POINTER(c_void_p), c_char_p]
 
+libRand.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
+libRand.GetBulkEnergy.restype = c_double
+
 
 cdict = {'blue':   ((0.0,  0.9, 0.9),
                     (0.5,  0.4, 0.4),
@@ -121,6 +124,9 @@ class System:
         # deleting pointers is important in c++
         #print('delete the system')
         self.lib.DeleteSystem(self.Adress)
+
+    def GetBulkEnergy(self):
+        return self.lib.GetBulkEnergy(self.Adress)
 
     def Evolv(self, NewState):
         self.ActualizeNp()

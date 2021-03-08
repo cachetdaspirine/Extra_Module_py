@@ -114,7 +114,8 @@ libHexagon.GetSystemEnergy.argtypes = [POINTER(c_void_p)]
 libHexagon.OutputSystemSite.argtypes = [POINTER(c_void_p), c_char_p]
 libHexagon.OutputSystemSpring.argtypes = [POINTER(c_void_p), c_char_p]
 
-
+libHexagon.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
+libHexagon.GetBulkEnergy.restype = c_double
 
 
 def make_colormap(seq):
@@ -328,7 +329,7 @@ class System:
                 self.Adress, Arraycpp, self.Lx, self.Ly)
             self.Energy = self.lib.GetSystemEnergy(self.Adress)
 
-    def CheckBulkEnergy(self):
+    def GetBulkEnergy(self):
         return self.lib.GetBulkEnergy(self.Adress)
 
     def PrintPerSite(self, Name='NoName.txt'):
