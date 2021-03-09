@@ -173,7 +173,12 @@ class System:
             print("can t output an empty system")
             return 0.
         self.lib.OutputSystemSite(self.Adress, Name.encode('utf-8'))
-    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.):
+    def GetNodePerSite(self):
+        self.PrintPerSite('ToReturn.txt')
+        Data = np.loadtxt('ToReturn.txt',dtype=float)
+        os.system('rm -f ToReturn.txt')
+        return Data
+    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
         # idea is to use the function  in  order  to  PrintPersite
@@ -196,7 +201,7 @@ class System:
                 XY.append([ligne[2 * i], ligne[2 * i + 1]])
             XC += sum(np.transpose(XY)[0]) / len(XY)
             YC += sum(np.transpose(XY)[1]) / len(XY)
-            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=True, fc=(
+            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=(
                 0.41, 0.83, 0.94, 0.5), ec=(0, 0, 0, 1), ls='-', zorder=0))
         ax.set_aspect(aspect=1.)
         ax.set_xlim([XC / Data.shape[0] - 1 / Zoom * np.sqrt(Data.shape[0]),
