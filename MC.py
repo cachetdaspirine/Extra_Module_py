@@ -4,7 +4,7 @@ Mc = np.array([np.zeros(12,dtype=float) for _ in range(12)])
 
 k = 1.
 kappa = 0.1
-eps = 0.1
+eps = 0.05
 # for i in range(12):
     # Mc[i,i]+=2
 #

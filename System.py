@@ -113,6 +113,7 @@ libHexagon.GetSystemEnergy.argtypes = [POINTER(c_void_p)]
 
 libHexagon.OutputSystemSite.argtypes = [POINTER(c_void_p), c_char_p]
 libHexagon.OutputSystemSpring.argtypes = [POINTER(c_void_p), c_char_p]
+libHexagon.OutputSpringPerSite.argtypes = [POINTER(c_void_p), c_char_p]
 
 libHexagon.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
 libHexagon.GetBulkEnergy.restype = c_double
@@ -185,8 +186,7 @@ cdict2 = {'red':   ((0,  0., 0.),
           }
 cm2 = LinearSegmentedColormap('my_colormap2', cdict2, 1024)
 cm = LinearSegmentedColormap('my_colormap', cdict, 1024)
-
-
+#cmap = cm.get_cmap()
 class System:
     def __init__(self, State=None,
                  eps=0.,
@@ -338,14 +338,18 @@ class System:
             print("can t output an empty system")
             return 0.
         self.lib.OutputSystemSite(self.Adress, Name.encode('utf-8'))
-
+    def PrintSpringPerSite(self,Name='NoName.txt'):
+        # output the spring per site(easier if you wanna plot the springs).
+        if self.Np < 1:
+            print("can t output an empty system")
+            return 0.
+        self.lib.OutputSpringPerSite(self.Adress, Name.encode('utf-8'))
     def PrintPerSpring(self, Name='NoName.txt'):
         # output the system per spring (easier if you wanna plot the springs).
         if self.Np < 1:
             print("can t output an empty system")
             return 0.
         self.lib.OutputSystemSpring(self.Adress, Name.encode('utf-8'))
-
     def PlotPerSite(self, figuresize=(7, 5), Zoom=1.):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
@@ -379,7 +383,40 @@ class System:
 
         # plt.show()
         return fig, ax
-
+    def PlotSiteStress(self,figuresize=(7,5),Zoom = 1.):
+        fig, ax = plt.subplots(figsize=figuresize)
+        self.PrintSpringPerSite('ToPlot.txt')
+        Data = np.loadtxt('ToPlot.txt', dtype=float)
+        os.system('rm -rf ToPlot.txt')
+        Data = Data.reshape(Data.shape[0]//12,12,6)
+        Xc,Yc = 0.,0.
+        Hex = list()
+        C = list()
+        for hex in Data:
+            XY=list()
+            Color =0.
+            for ligne in hex:
+                if ligne[5]<0.9:
+                    XY.append([ligne[0],ligne[1]])
+                    Xc+=ligne[0]
+                    Yc+=ligne[1]
+                else:
+                    norm = ((ligne[2] - ligne[0])**2 + (ligne[3] - ligne[1])**2)**0.5
+                    Color+=abs(norm-ligne[5])/(norm+ligne[5])/6.
+            Hex.append(XY)
+            C.append(Color)
+        C = (C/max(C)-0.5)*2
+        for n,XY in enumerate(Hex):
+            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=True, fc=cm(C[n]),
+            ec=(0, 0, 0, 1), ls='-', zorder=0))
+        Xc = Xc/(6*Data.shape[0])
+        Yc = Yc/(6*Data.shape[0])
+        ax.set_xlim([Xc - 1 / Zoom * np.sqrt(Data.shape[0]),
+                     Xc + 1 / Zoom * np.sqrt(Data.shape[0])])
+        ax.set_ylim([Yc - 1 / Zoom * np.sqrt(Data.shape[0]),
+                     Yc + 1 / Zoom * np.sqrt(Data.shape[0])])
+        ax.set_aspect(aspect=1.)
+        return fig,ax
     def PlotPerSpring(self, figuresize=(7, 5), Zoom=1., Colorbar=None):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
@@ -401,15 +438,16 @@ class System:
         if type(Data[0]) != np.ndarray:
             Data = np.array([Data])
         for ligne in Data:
-            X1 = np.append(X1, ligne[0])
-            Y1 = np.append(Y1, ligne[1])
-            X2 = np.append(X2, ligne[2])
-            Y2 = np.append(Y2, ligne[3])
-            C0 = np.append(C0, ligne[5])
-            C1 = np.append(
-                C1, ((ligne[2] - ligne[0])**2 + (ligne[3] - ligne[1])**2)**0.5)
+            if ligne[5]>0.8:
+                X1 = np.append(X1, ligne[0])
+                Y1 = np.append(Y1, ligne[1])
+                X2 = np.append(X2, ligne[2])
+                Y2 = np.append(Y2, ligne[3])
+                C0 = np.append(C0, ligne[5])
+                C1 = np.append(
+                    C1, ((ligne[2] - ligne[0])**2 + (ligne[3] - ligne[1])**2)**0.5)
         # Colorlim=(min(C0),max(C0))
-        Colorlim = (min(((C1 - C0) / (C0))), max(((C1 - C0) / (C0))))
+        #Colorlim = (min(((C1 - C0) / (C0))), max(((C1 - C0) / (C0))))
         # if eps != 0:
         #    Colorlim = (0,eps)
         XC = sum(X1) / X1.shape[0]
@@ -420,9 +458,9 @@ class System:
                      XC + 1 / Zoom * np.sqrt(Data.shape[0] / 12.)])
         ax.set_ylim([YC - 1 / Zoom * np.sqrt(Data.shape[0] / 12.),
                      YC + 1 / Zoom * np.sqrt(Data.shape[0] / 12.)])
-        plot = ax.quiver(X1, Y1, X2 - X1, Y2 - Y1, C0,
-                         scale=1.0, angles='xy', scale_units='xy', width=0.004, minlength=0., headlength=0.,
-                         headaxislength=0., headwidth=0., alpha=1, edgecolor='k', cmap=self.MAP, clim=Colorlim)
+        plot = ax.quiver(X1, Y1, X2 - X1, Y2 - Y1, abs(C0-C1),
+                         scale=1.0, angles='xy', scale_units='xy', width=0.006, minlength=0., headlength=0.,
+                         headaxislength=0., headwidth=0., alpha=1, edgecolor='k', cmap=self.MAP)#, clim=Colorlim)
         # if eps != 0:
         #    plot.set_clim(Colorlim)
         if Colorbar:
