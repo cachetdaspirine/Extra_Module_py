@@ -93,6 +93,12 @@ libTriangle.OutputSystemSpring.argtypes = [POINTER(c_void_p), c_char_p]
 libTriangle.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
 libTriangle.GetBulkEnergy.restype = c_double
 
+libTriangle.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
+libTriangle.AffineDeformation.restype = c_double
+
+libTriangle.Extension.argtypes = [POINTER(c_void_p),c_int]
+libTriangle.Extension.restype = c_double
+
 libHexagon = cdll.LoadLibrary(
     str(pathlib.Path(__file__).parent.absolute()) + '/libHexagon.so')
 
@@ -118,6 +124,11 @@ libHexagon.OutputSpringPerSite.argtypes = [POINTER(c_void_p), c_char_p]
 libHexagon.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
 libHexagon.GetBulkEnergy.restype = c_double
 
+libHexagon.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
+libHexagon.AffineDeformation.restype = c_double
+
+libHexagon.Extension.argtypes = [POINTER(c_void_p),c_int]
+libHexagon.Extension.restype = c_double
 
 def make_colormap(seq):
     """Return a LinearSegmentedColormap
@@ -343,14 +354,15 @@ class System:
         if self.Np < 1:
             print("can t output an empty system")
             return 0.
-        self.lib.OutputSpringPerSite(self.Adress, Name.encode('utf-8'))
+        if self.ParticleType=='Hexagon':
+            self.lib.OutputSpringPerSite(self.Adress, Name.encode('utf-8'))
     def PrintPerSpring(self, Name='NoName.txt'):
         # output the system per spring (easier if you wanna plot the springs).
         if self.Np < 1:
             print("can t output an empty system")
             return 0.
         self.lib.OutputSystemSpring(self.Adress, Name.encode('utf-8'))
-    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.):
+    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
         # idea is to use the function  in  order  to  PrintPersite
@@ -373,7 +385,7 @@ class System:
                 XY.append([ligne[2 * i], ligne[2 * i + 1]])
             XC += sum(np.transpose(XY)[0]) / len(XY)
             YC += sum(np.transpose(XY)[1]) / len(XY)
-            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=True, fc=(
+            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=(
                 0.41, 0.83, 0.94, 0.5), ec=(0, 0, 0, 1), ls='-', zorder=0))
         ax.set_aspect(aspect=1.)
         ax.set_xlim([XC / Data.shape[0] - 1 / Zoom * np.sqrt(Data.shape[0]),
@@ -383,7 +395,7 @@ class System:
 
         # plt.show()
         return fig, ax
-    def PlotSiteStress(self,figuresize=(7,5),Zoom = 1.):
+    def PlotSiteStress(self,figuresize=(7,5),Zoom = 1.,Cmax=None):
         fig, ax = plt.subplots(figsize=figuresize)
         self.PrintSpringPerSite('ToPlot.txt')
         Data = np.loadtxt('ToPlot.txt', dtype=float)
@@ -405,7 +417,11 @@ class System:
                     Color+=abs(norm-ligne[5])/(norm+ligne[5])/6.
             Hex.append(XY)
             C.append(Color)
-        C = (C/max(C)-0.5)*2
+        if Cmax:
+            C = (np.asarray(C)/Cmax-0.5)*2
+        else:
+            #print(max(C))
+            C = (C/max(C))
         for n,XY in enumerate(Hex):
             ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=True, fc=cm(C[n]),
             ec=(0, 0, 0, 1), ls='-', zorder=0))
@@ -462,7 +478,7 @@ class System:
                          scale=1.0, angles='xy', scale_units='xy', width=0.006, minlength=0., headlength=0.,
                          headaxislength=0., headwidth=0., alpha=1, edgecolor='k', cmap=self.MAP)#, clim=Colorlim)
         # if eps != 0:
-        #    plot.set_clim(Colorlim)
+        plot.set_clim((0,0.005))
         if Colorbar:
             fig.colorbar(plot, ax=ax)
         ax.set_aspect(aspect=1.)
@@ -478,3 +494,10 @@ class System:
             self.Np = dict(zip(unique, counts))[1]
         except:
             self.Np = 0
+    def Extension(self,ax):
+        if any([s==0 for S in self.state for s in S]):
+            print('the system isn t full of particle, we can t apply any deformation')
+            raise ValueError
+        return self.lib.Extension(self.Adress,ax)
+    def AffineDeformation(self, deformation_x = 0, deformation_y = 0):
+        return self.lib.AffineDeformation(self.Adress,deformation_x,deformation_y)

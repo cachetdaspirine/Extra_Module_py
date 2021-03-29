@@ -34,6 +34,12 @@ libRand.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
 libRand.GetBulkEnergy.restype = c_double
 
 
+libRand.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
+libRand.AffineDeformation.restype = c_double
+
+libRand.Extension.argtypes = [POINTER(c_void_p),c_int]
+libRand.Extension.restype = c_double
+
 cdict = {'blue':   ((0.0,  0.9, 0.9),
                     (0.5,  0.4, 0.4),
                     (1.0,  0.1, 0.1)),
@@ -178,7 +184,7 @@ class System:
         Data = np.loadtxt('ToReturn.txt',dtype=float)
         os.system('rm -f ToReturn.txt')
         return Data
-    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True):
+    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True,FIGAX=None):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
         # idea is to use the function  in  order  to  PrintPersite
@@ -188,7 +194,10 @@ class System:
             print("can t output an empty system")
             return 0.
         # Directly plot the whole system as patches of polygon, it just require to save a file that it will delete
-        fig, ax = plt.subplots(figsize=figuresize)
+        if FIGAX:
+            fig,ax = FIGAX
+        else:
+            fig, ax = plt.subplots(figsize=figuresize)
         self.PrintPerSite('ToPlot.txt')
         Data = np.loadtxt('ToPlot.txt', dtype=float)
         os.system('rm -rf ToPlot.txt')
@@ -220,3 +229,10 @@ class System:
             self.Np = dict(zip(unique, counts))[1]
         except:
             self.Np = 0
+    def Extension(self,ax):
+        if any([s==0 for S in self.state for s in S]):
+            print('the system isn t full of particle, we can t apply any deformation')
+            raise ValueError
+        return libRand.Extension(self.Adress,ax)
+    def AffineDeformation(self, deformation_x = 0, deformation_y = 0):
+        return libRand.AffineDeformation(self.Adress,deformation_x,deformation_y)
