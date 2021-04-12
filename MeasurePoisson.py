@@ -10,7 +10,7 @@ def Parabola(x,a,b,c):
 uxxmin = -0.05
 uxxmax = 0.05
 NPoints = 100
-SystemSize = 50
+SystemSize = 1
 
 def GetL4MU(Mc=0, q0=0,check=False,Parameter = None):
     # Computation variables
@@ -23,6 +23,7 @@ def GetL4MU(Mc=0, q0=0,check=False,Parameter = None):
     else:
         Sys = RS.System(Mc, q0, State)
     V = Sys.Extension(0)*Sys.Extension(1)
+    Sys.GetBulkEnergy()
     E0 = Sys.Energy
     for n in range(NPoints+1):
         uxx=(uxxmax-uxxmin)/NPoints*n+uxxmin
@@ -51,6 +52,7 @@ def GetLambda(Mc=0,q0=0,check=False,Parameter = None):
     else:
         Sys = RS.System(Mc, q0, State)
     V = Sys.Extension(0)*Sys.Extension(1)
+    Sys.GetBulkEnergy()
     E0 = Sys.Energy
     for n in range(NPoints+1):
         uxx=(uxxmax-uxxmin)/NPoints*n+uxxmin

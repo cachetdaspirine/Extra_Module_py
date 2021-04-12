@@ -1,12 +1,16 @@
 import numpy as np
-CouplingRelation=np.load('CouplingRelation.npy',allow_pickle=True)
-MainRelation=np.load('MainRelation.npy',allow_pickle=True)
-VolumiqueRelationP=np.load('VolumiqueRelationP.npy',allow_pickle=True)
-VolumiqueRelationM=np.load('VolumiqueRelationM.npy',allow_pickle=True)
+import pathlib
+
+CouplingRelation=np.load(str(pathlib.Path(__file__).parent.absolute())+'/CouplingRelation.npy',allow_pickle=True)
+MainRelation=np.load(str(pathlib.Path(__file__).parent.absolute())+'/MainRelation.npy',allow_pickle=True)
+VolumiqueRelationP=np.load(str(pathlib.Path(__file__).parent.absolute())+'/VolumiqueRelationP.npy',allow_pickle=True)
+VolumiqueRelationM=np.load(str(pathlib.Path(__file__).parent.absolute())+'/VolumiqueRelationM.npy',allow_pickle=True)
 #print(VolumiqueRelationP)
 #print(VolumiqueRelationM)
 
-def get_Mc(k=0,kc=0,eps=0,kA=0):
+def get_Mc(k=0,kc=0,eps=0,kA=0,Parameter = False):
+    if Parameter:
+        k,kc,eps,kA = Parameter.k, Parameter.kc,Parameter.epsilon,Parameter.kA
     Mc = np.array([np.zeros(12,dtype=float) for _ in range(12)])
     Ap = (1+eps)**2*3**0.5/4.
     Am = (1-eps)**2*3**0.5/4.

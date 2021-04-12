@@ -1,10 +1,15 @@
 import numpy as np
 import System as Sys
+import RandSyst as RSys
 import Shape as Sh
+from MC import *
 
 
 class BD:
-    def __init__(self,Nmax,P):
+    def __init__(self,Nmax,P,Expansion = False,Mc=False,q0=False):
+        self.Expansion = Expansion
+        self.Mc = Mc
+        self.q0 = q0
         self.Nmax = Nmax
         self.Range = P.HRange(Nmax)
         self.NList = np.array([Sh.Np(Sh.Parallel(r,P.ParticleType)) for r in self.Range])
@@ -18,6 +23,15 @@ class BD:
         #Kvol=P.kA,
         #ParticleType=P.ParticleType)
         #for r in self.Range])
+    def MakeSystem(self,State,P):
+        if self.Expansion :
+            if self.Mc and self.q0:
+                return RSys.System(self.Mc,self.q0,State)
+            else:
+                Mc,q0 = get_Mc(Parameter = P)
+                return RSys.System(Mc,q0,State)
+        else :
+            return Sys.System(State = State,Parameter = P)
     def Get_E(self,n,P):
         if n>= self.Range.shape[0]:
             n=-1
@@ -27,12 +41,13 @@ class BD:
         if self.SystemEnergy[n]:
             return (self.SystemEnergy[n]+Sh.SurfaceEnergy(DiskArray,J=P.J,ParticleType=P.ParticleType))/Sh.Np(DiskArray)
         else :
-            self.SystemEnergy[n] =Sys.System(
-            DiskArray,
-            eps=P.epsilon,
-            Kcoupling=P.kc,
-            Kvol=P.kA,
-            ParticleType=P.ParticleType).Energy
+            #self.SystemEnergy[n] =Sys.System(
+            #DiskArray,
+            #eps=P.epsilon,
+            #Kcoupling=P.kc,
+            #Kvol=P.kA,
+            #ParticleType=P.ParticleType).Energy
+            self.SystemEnergy[n] = self.MakeSystem(DiskArray,P).Energy
             return (self.SystemEnergy[n]+Sh.SurfaceEnergy(DiskArray,J=P.J,ParticleType=P.ParticleType))/Sh.Np(DiskArray)
     def Get_Best_Disk(self,P):
         n1 = 0

@@ -1,5 +1,7 @@
 import numpy as np
 import System as Sys
+import RandSyst as RSys
+from MC import *
 import Shape as Sh
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
@@ -12,24 +14,27 @@ import InfiniteFilamentsHexagons_v1 as H
 def line(x,a,b):
     return a*x+b
 class BF:
-    def __init__(self,WidthMax,P,type=1):
+    def __init__(self,WidthMax,P,Expansion=False,Mc=False,q0 = False):
         #Make an array of system for each W
         self.Wmax = WidthMax
         self.Aspect = np.array([1./3.,1./5.,0.1])
-        self.type=type
+        self.Expansion = Expansion
+        self.Mc = Mc
+        self.q0 = q0
         #self.Aspect = np.array([1./10.,1./50.,0.01])
-        if P.ParticleType == 'Triangle':
-            self.width_list, self.energy_list, BulkE = \
-                    T.DetermineInfiniFilamentEnergy(P.k, P.k, P.kc, \
-                                                    P.kA, P.kA, \
-                                                    1., \
-                                                    P.epsilon, 0., WidthMax)
-        elif P.ParticleType == 'Hexagon':
-            self.width_list,self.energy_list1, self.energy_list2, BulkE = \
-                    H.DetermineInfiniFilamentEnergy(P.k, P.k, P.kc, \
-                                                    P.kA, P.kA, \
-                                                    1., \
-                                                    P.epsilon, 0., WidthMax)
+        if not self.Expansion:
+            if P.ParticleType == 'Triangle':
+                self.width_list, self.energy_list, BulkE = \
+                        T.DetermineInfiniFilamentEnergy(P.k, P.k, P.kc, \
+                                                        P.kA, P.kA, \
+                                                        1., \
+                                                        P.epsilon, 0., WidthMax)
+            elif P.ParticleType == 'Hexagon':
+                self.width_list,self.energy_list1, self.energy_list2, BulkE = \
+                        H.DetermineInfiniFilamentEnergy(P.k, P.k, P.kc, \
+                                                        P.kA, P.kA, \
+                                                        1., \
+                                                        P.epsilon, 0., WidthMax)
         self.Systems = np.array([np.empty(3,dtype=object) for w in range(0,WidthMax,1)])
     def Np(self,W,L,P):
         if P.ParticleType=='Hexagon':
@@ -39,24 +44,34 @@ class BF:
                 return (W)*L # Careful if the type of fiber
         else :
             return W*L
-    def CheckInfFiber(self,w,P):
+    def MakeSystem(self,State,P):
+        if self.Expansion :
+            if self.Mc and self.q0:
+                return RSys.System(self.Mc,self.q0,State)
+            else :
+                Mc,q0 = get_Mc(Parameter = P)
+                return RSys.System(Mc,q0,State)
+        else :
+            return Sys.System(State = State,Parameter = P)
+    def CheckInfFiber(self,w,P,type=1):
         E=list()
         if w >= self.Wmax:
             w = self.Wmax
         if not self.Systems[w-1][0]:
             for n,a in enumerate(self.Aspect):
-                self.Systems[w-1][n] = Sys.System(
-                Sh.Fiber(w,int(w/a),ParticleType=P.ParticleType,type = self.type),
-                Kmain=P.k,
-                eps=P.epsilon,
-                Kcoupling=P.kc,
-                Kvol=P.kA,
-                ParticleType=P.ParticleType)
+                #self.Systems[w-1][n] = Sys.System(
+                #Sh.Fiber(w,int(w/a),ParticleType=P.ParticleType,type = self.type),
+                #Kmain=P.k,
+                #eps=P.epsilon,
+                #Kcoupling=P.kc,
+                #Kvol=P.kA,
+                #ParticleType=P.ParticleType)
+                self.Systems[w-1][n] = self.MakeSystem(Sh.Fiber(w,int(w/a),type=type),P)
         for i,S in enumerate(self.Systems[w-1]):
             A = self.Aspect[i]
             #S.PrintPerSite('k'+str(P.k)+'_kA'+str(P.kA)+'_kc'+str(P.kc)+'_A'+str(A)+'.res')
             #loop over several aspect ratio
-            FiberArray = Sh.Fiber(w,int(w/A),ParticleType=P.ParticleType,type=self.type)
+            FiberArray = Sh.Fiber(w,int(w/A),ParticleType=P.ParticleType,type=type)
             SurfaceEnergy = Sh.SurfaceEnergy(FiberArray,J=P.J,ParticleType=P.ParticleType)
             E.append((S.Energy+SurfaceEnergy)/self.Np(w,int(w/A),P))#(w*int(w/A)))
 
@@ -72,29 +87,36 @@ class BF:
             return self.energy_list[w-1]+P.J/w
         elif P.ParticleType == 'Hexagon':
             if type == 1:
-                return self.energy_list1[w-1]+4*P.J/w
+                if self.Expansion :
+                    return self.Get_Einf(w,P,type=type)#+4*P.J/w
+                else :
+                    return self.energy_list1[w-1]+4*P.J/w
             elif type ==2:
-                return self.energy_list2[w-1]+4*P.J/w
+                if self.Expansion :
+                    return self.Get_Einf(w,P,type=type)#+4*P.J/w
+                else :
+                    return self.energy_list2[w-1]+4*P.J/w
             else :
                 print('fiber type not precised')
                 return 0.
-    def Get_Einf(self,w,P):
+    def Get_Einf(self,w,P,type = 1):
         E=list()
         if w >= self.Wmax:
             w = self.Wmax
         if not self.Systems[w-1][0]:
             for n,a in enumerate(self.Aspect):
-                self.Systems[w-1][n] = Sys.System(
-                Sh.Fiber(w,int(w/a),ParticleType=P.ParticleType,type=self.type),
-                Kmain=P.k,
-                eps=P.epsilon,
-                Kcoupling=P.kc,
-                Kvol=P.kA,
-                ParticleType=P.ParticleType)
+                #self.Systems[w-1][n] = Sys.System(
+                #Sh.Fiber(w,int(w/a),ParticleType=P.ParticleType,type=self.type),
+                #Kmain=P.k,
+                #eps=P.epsilon,
+                #Kcoupling=P.kc,
+                #Kvol=P.kA,
+                #ParticleType=P.ParticleType)
+                self.Systems[w-1][n]=self.MakeSystem(Sh.Fiber(w,int(w/a),type=type),P)
         for i,S in enumerate(self.Systems[w-1]):
             A = self.Aspect[i]
             #loop over several aspect ratio
-            FiberArray = Sh.Fiber(w,int(w/A),ParticleType=P.ParticleType,type=self.type)
+            FiberArray = Sh.Fiber(w,int(w/A),ParticleType=P.ParticleType,type=type)
             SurfaceEnergy = Sh.SurfaceEnergy(FiberArray,J=P.J,ParticleType=P.ParticleType)
             E.append((S.Energy+SurfaceEnergy)/self.Np(w,int(w/A),P))#(w*int(w/A)))
         try :

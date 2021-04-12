@@ -11,7 +11,8 @@ import numpy as np
 ########################################################
 ########################################################
 ########################################################
-def RandomParticle(seed_temp, n_t):
+def RandomParticle(seed_temp):
+    n_t = 2
     ##########################
     np.random.seed(seed_temp)
     ## Random matrix
