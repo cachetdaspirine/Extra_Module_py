@@ -18,11 +18,11 @@ class BB:
                 self.Systems[O] = self.MakeSystem(Sh.Lacunar(P.HSize(self.Nmax),O,P.ParticleType),P)
     def MakeSystem(self,State,P):
         if self.Expansion :
-            if self.Mc and self.q0:
+            if isinstance(self.Mc,np.ndarray) and isinstance(self.q0,np.ndarray):
                 return RSys.System(self.Mc,self.q0,State)
-            else:
+            else :
                 Mc,q0 = get_Mc(Parameter = P)
-                return RSys.System(Mc,q0,State)
+                return RSys.System(Mc,q0,State)                                
         else :
             return Sys.System(State = State,Parameter = P)
     def Get_E(self,Order,P):

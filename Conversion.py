@@ -1,14 +1,11 @@
 import numpy as np
 from scipy.optimize import newton
+import RandSyst as RSys
+import MeasurePoisson as Poisson
+import RandomParticleFunctions_v2 as RMatrix
+
 class SimulToAnalytic:
-    def __init__(self,k,kA,kc,J,epsilon,writting=True,ParticleType='Triangle'):
-        if not isinstance(k,float) or (not isinstance(kA,float)) or (not isinstance(kc,float)) or (not isinstance(epsilon,float)):
-                print('k='+str(k))
-                print('kA='+str(kA))
-                print('kc='+str(kc))
-                print('j='+str(J))
-                print('eps='+str(epsilon))
-                raise TypeError('bad type of variable')
+    def __init__(self,k=1,kA=0,kc=0.001,J=0,epsilon=0.001,writting=True,ParticleType='Triangle'):
         self.k,self.kA,self.kc,self.J,self.epsilon,self.ParticleType = k,kA,kc,J,epsilon,ParticleType #store the constant
         self.nu=(np.sqrt(3)*self.k+2*self.kA)/(3*np.sqrt(3)*self.k+2*self.kA) # Poisson's ratop
         if ParticleType=='Triangle':
@@ -85,13 +82,6 @@ class SimulToAnalytic:
             return max(int(1./6.* (3+np.sqrt(3*(4*N-1)))),1)
 class AnalyticToSimul:
     def __init__(self,nu=1/3,Gamma=0.,l=1.,epsilon=0.1,writting = True,ParticleType='Triangle'): #here we assumed k = 1
-        if (not isinstance(nu,float)) or (not isinstance(Gamma,float)) or (not isinstance(l,float)) or (not isinstance(epsilon,float)):
-            print('nu='+str(nu))
-            print('Gamma='+str(Gamma))
-            print('l='+str(l))
-            print('epsilon='+str(epsilon))
-            print(isinstance(epsilon,float))
-            raise TypeError('bad type of variable')
         self.nu,self.Gamma,self.l,self.epsilon,self.ParticleType = nu,Gamma,l,epsilon,ParticleType
         self.k = 1
         self.kA = (3*np.sqrt(3)*self.nu-np.sqrt(3))/(2*(1-self.nu))
@@ -175,3 +165,19 @@ class AnalyticToSimul:
                 print('nu='+str(self.nu))
                 print('Gamma='+str(self.Gamma))
                 print('l='+str(self.l))
+class MatrixToContinuum:
+    def __init__(self,Mc,q0,eps1,eps2,Gamma,writting= False):
+        self.Mc,self.q0,self.eps1,self.eps2 = Mc,q0,eps1,eps2
+        S = RSys.System(Mc,q0,np.array([[1]]))
+        self.FB = S.GetBulkEnergy()
+        self.L4MU = Poisson.GetL4MU(Mc,q0)
+        self.nu = Poisson.ComputePoissonRatio(Mc,q0)
+        self.EigenValues = RMatrix.FindEigenValues(Mc)
+        self.Kc = self.EigenValues[-4]
+        self.l = np.sqrt(self.L4MU/self.Kc)
+        if writting:
+            print('FB = '+str(self.FB))
+            print('L4MU = '+str(self.L4MU))
+            print('nu = '+str(self.nu))
+            print('Kc = '+str(self.Kc))
+            print('l = '+str(self.l))

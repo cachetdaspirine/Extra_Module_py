@@ -4,6 +4,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
+import time
 import numpy as np
 import pathlib
 from ctypes import cdll
@@ -204,14 +205,22 @@ class System:
         XC, YC = 0, 0
         if type(Data[0]) != np.ndarray:
             Data = np.array([Data])
+        Hex=list()
+        C = list()
         for ligne in Data:
             XY = []
-            for i in range(ligne.shape[0] // 2):
+            for i in range((ligne.shape[0]-1) // 2):
                 XY.append([ligne[2 * i], ligne[2 * i + 1]])
             XC += sum(np.transpose(XY)[0]) / len(XY)
             YC += sum(np.transpose(XY)[1]) / len(XY)
-            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=(
-                0.41, 0.83, 0.94, 0.5), ec=(0, 0, 0, 1), ls='-', zorder=0))
+            Color = ligne[-1]
+            Hex.append(XY)
+            C.append(Color)
+        C = np.array(C)/max(C)
+        for n,XY in enumerate(Hex):
+            #ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=(
+            #    0.41, 0.83, 0.94, 0.5), ec=(0, 0, 0, 1), ls='-', zorder=0))
+            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=cm(C[n]), ec=(0, 0, 0, 1), ls='-', zorder=0))
         ax.set_aspect(aspect=1.)
         ax.set_xlim([XC / Data.shape[0] - 1 / Zoom * np.sqrt(Data.shape[0]),
                      XC / Data.shape[0] + 1 / Zoom * np.sqrt(Data.shape[0])])

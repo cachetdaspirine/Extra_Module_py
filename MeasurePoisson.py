@@ -11,6 +11,10 @@ uxxmin = -0.05
 uxxmax = 0.05
 NPoints = 100
 SystemSize = 1
+def GetEBulk(Mc,q0):
+    State=np.full((SystemSize,SystemSize),1)
+    Sys = RS.System(Mc, q0, State)
+    return Sys.GetBulkEnergy()
 
 def GetL4MU(Mc=0, q0=0,check=False,Parameter = None):
     # Computation variables

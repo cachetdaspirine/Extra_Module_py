@@ -25,9 +25,9 @@ class BD:
         #for r in self.Range])
     def MakeSystem(self,State,P):
         if self.Expansion :
-            if self.Mc and self.q0:
+            if isinstance(self.Mc,np.ndarray) and isinstance(self.q0,np.ndarray):
                 return RSys.System(self.Mc,self.q0,State)
-            else:
+            else :
                 Mc,q0 = get_Mc(Parameter = P)
                 return RSys.System(Mc,q0,State)
         else :

@@ -20,7 +20,7 @@ def RandomParticle(seed_temp):
     ##########################
     for ind_i in range(12):
         m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t
-    q0_vec = RandomPositions(seed_temp)
+    q0_vec,eps1,eps2 = RandomPositions(seed_temp)
     ##########################
     ## symmetrize
     ##########################
@@ -56,7 +56,7 @@ def RandomParticle(seed_temp):
     #m_ij = np.delete(m_ij,0,axis=0)
     ##########################
     ##########################
-    return (m_ij, q0_vec)
+    return (m_ij, q0_vec,eps1,eps2)
 ########################################################
 ########################################################
 ########################################################
@@ -65,8 +65,8 @@ def RandomPositions(seed_temp):
     ##########################
     np.random.seed(seed_temp)
     ## Two random epsilon
-    epsilon_1 = 0.1#np.random.rand(1)/10.0
-    epsilon_2 = 0.#np.random.rand(1)/10.0
+    epsilon_1 = np.random.rand(1)[0]/10.0
+    epsilon_2 = 0.#np.random.rand(1)[0]/10.0
     ## Regular Hexagon
     ell2 = 1.0 + epsilon_1
     q0_vec = np.zeros(12)
@@ -82,16 +82,23 @@ def RandomPositions(seed_temp):
     # q0_vec[9] = -math.sqrt(3.0/4.0)*l0
     q0_vec[0] = 0.5774 * (1+epsilon_1) * math.cos(math.pi/3+epsilon_2)
     q0_vec[1] = 0.5774 * (1+epsilon_1) * math.sin(math.pi/3+epsilon_2)
-    q0_vec[2] = - 0.5774 * (1+epsilon_1) * math.cos(math.pi/3+epsilon_2)
-    q0_vec[3] = 0.5774 * (1+epsilon_1) * math.sin(math.pi/3+epsilon_2)
-    q0_vec[4],q0_vec[5] = -0.5774,0.
-    q0_vec[6] = -0.5774 * (1+epsilon_1) * math.cos(math.pi/3+epsilon_2)
-    q0_vec[7] = -0.5774 * (1+epsilon_1) * math.sin(math.pi/3+epsilon_2)
+
+    q0_vec[2] = - 0.5774 * (1-epsilon_1) * math.cos(math.pi/3-epsilon_2)
+    q0_vec[3] = 0.5774 * (1-epsilon_1) * math.sin(math.pi/3-epsilon_2)
+
+    q0_vec[4] = 0.5774*(1+epsilon_1)*math.cos(math.pi+epsilon_2)
+    q0_vec[5] = 0.5774*(1+epsilon_1)*math.sin(math.pi+epsilon_2)
+
+    q0_vec[6] = -0.5774 * (1-epsilon_1) * math.cos(math.pi/3-epsilon_2)
+    q0_vec[7] = -0.5774 * (1-epsilon_1) * math.sin(math.pi/3-epsilon_2)
+
     q0_vec[8] = 0.5774 * (1+epsilon_1) * math.cos(math.pi/3+epsilon_2)
     q0_vec[9] = -0.5774 * (1+epsilon_1) * math.sin(math.pi/3+epsilon_2)
-    q0_vec[10],q0_vec[11] = 0.5774,0.
+
+    q0_vec[10] = 0.5774 * math.cos(2*math.pi-epsilon_2) * (1-epsilon_1)
+    q0_vec[11] = 0.5774 * math.sin(2*math.pi-epsilon_2) * (1-epsilon_1)
     #q0_vec = np.array([0.5774,0.,0.2887,0.5,-0.2887,0.5,-0.5774,0.,-0.2887,-0.5,0.2887,-0.5])
-    return q0_vec
+    return q0_vec,epsilon_1,epsilon_2
 ########################################################
 ########################################################
 ########################################################

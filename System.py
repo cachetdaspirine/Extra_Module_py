@@ -5,6 +5,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 import pathlib
 from ctypes import cdll
 from ctypes import c_double

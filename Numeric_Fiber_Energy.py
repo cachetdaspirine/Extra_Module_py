@@ -46,11 +46,11 @@ class BF:
             return W*L
     def MakeSystem(self,State,P):
         if self.Expansion :
-            if self.Mc and self.q0:
+            if isinstance(self.Mc,np.ndarray) and isinstance(self.q0,np.ndarray):
                 return RSys.System(self.Mc,self.q0,State)
             else :
                 Mc,q0 = get_Mc(Parameter = P)
-                return RSys.System(Mc,q0,State)
+                return RSys.System(Mc,q0,State)                
         else :
             return Sys.System(State = State,Parameter = P)
     def CheckInfFiber(self,w,P,type=1):
