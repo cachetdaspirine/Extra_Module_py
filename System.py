@@ -2,6 +2,7 @@ import os
 import matplotlib.colors as mcolors
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.collections import PatchCollection
+import matplotlib.lines as mlines
 from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
 import numpy as np
@@ -130,7 +131,10 @@ libHexagon.AffineDeformation.restype = c_double
 
 libHexagon.Extension.argtypes = [POINTER(c_void_p),c_int]
 libHexagon.Extension.restype = c_double
-
+import math
+def truncate(number, digits) -> float:
+    stepper = 10.0 ** digits
+    return math.trunc(stepper * number) / stepper
 def make_colormap(seq):
     """Return a LinearSegmentedColormap
     seq: a sequence of floats and RGB-tuples. The floats should be increasing
@@ -146,6 +150,11 @@ def make_colormap(seq):
             cdict['green'].append([item, g1, g2])
             cdict['blue'].append([item, b1, b2])
     return mcolors.LinearSegmentedColormap('CustomMap', cdict)
+CNRSColors = [(98./255.,196./255.,221./255.),
+            (0/255.,41./255.,75./255.),
+            (69./255.,100./255.,135./255.),
+            (0./255.,126./255.,148./255.),
+            (0./255.,68./255.,148./255.)]
 
 
 cdict = {'blue':   ((0.0,  0.9, 0.9),
@@ -363,7 +372,7 @@ class System:
             print("can t output an empty system")
             return 0.
         self.lib.OutputSystemSpring(self.Adress, Name.encode('utf-8'))
-    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True):
+    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True,Edge= True):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
         # idea is to use the function  in  order  to  PrintPersite
@@ -386,14 +395,33 @@ class System:
                 XY.append([ligne[2 * i], ligne[2 * i + 1]])
             XC += sum(np.transpose(XY)[0]) / len(XY)
             YC += sum(np.transpose(XY)[1]) / len(XY)
-            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=(
-                0.41, 0.83, 0.94, 0.5), ec=(0, 0, 0, 1), ls='-', zorder=0))
+            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=CNRSColors[3], ec=(0, 0, 0, 1), ls='-', zorder=0))
         ax.set_aspect(aspect=1.)
         ax.set_xlim([XC / Data.shape[0] - 1 / Zoom * np.sqrt(Data.shape[0]),
                      XC / Data.shape[0] + 1 / Zoom * np.sqrt(Data.shape[0])])
         ax.set_ylim([YC / Data.shape[0] - 1 / Zoom * np.sqrt(Data.shape[0]),
                      YC / Data.shape[0] + 1 / Zoom * np.sqrt(Data.shape[0])])
-
+        if Edge:
+            edges=list()
+            #----------Make a list with all the edge in my system---------
+            for ligne in Data:
+                PointsX=[truncate(ligne[2*i],3) for i in range(ligne.__len__()//2)]
+                PointsY=[truncate(ligne[2*i+1],3) for i in range(ligne.__len__()//2)]
+                Points=list(zip(PointsX,PointsY))
+                for i in range(Points.__len__()):
+                    if self.ParticleType=='Triangle':
+                        edges.append(sorted([Points[i],Points[(i+1)%3]]))
+                    elif self.ParticleType=='Hexagon':
+                        edges.append(sorted([Points[i],Points[(i+1)%6]]))
+            #----------Convert this list into a dictionnary which value is the number of appearance
+            unique, counts = np.unique(edges, return_counts=True,axis=0)
+            FreeEdgeIndex=np.where(counts==1)
+            for n,index in enumerate(FreeEdgeIndex[0]):
+                X , Y =list(),list()
+                for Points in unique[index]:
+                    X.append(Points[0])
+                    Y.append(Points[1])
+                ax.add_line(mlines.Line2D(X,Y,color=(231./255.,81./255.,19./255.),linewidth=3.))
         # plt.show()
         return fig, ax
     def PlotSiteStress(self,figuresize=(7,5),Zoom = 1.,Cmax=None):

@@ -61,7 +61,7 @@ cdict = {'blue':   ((0.0,  0.9, 0.9),
 cm = LinearSegmentedColormap('my_colormap', cdict, 1024)
 
 class System:
-    def __init__(self,CouplingMatrix, q0, State=None,old_system=None):
+    def __init__(self,CouplingMatrix=None, q0=None, State=None,old_system=None):
         if old_system == None:
                 self.None_Copy(State, CouplingMatrix, q0)
         else:
@@ -185,7 +185,7 @@ class System:
         Data = np.loadtxt('ToReturn.txt',dtype=float)
         os.system('rm -f ToReturn.txt')
         return Data
-    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True,FIGAX=None):
+    def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True,FillColor='stress',FIGAX=None):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
         # idea is to use the function  in  order  to  PrintPersite
@@ -216,11 +216,13 @@ class System:
             Color = ligne[-1]
             Hex.append(XY)
             C.append(Color)
-        C = np.array(C)/max(C)
+        C = (np.array(C)/max(C)-0.5)*2
         for n,XY in enumerate(Hex):
-            #ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=(
-            #    0.41, 0.83, 0.94, 0.5), ec=(0, 0, 0, 1), ls='-', zorder=0))
-            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=cm(C[n]), ec=(0, 0, 0, 1), ls='-', zorder=0))
+            if FillColor == 'plain':
+                ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=(
+                    0.41, 0.83, 0.94, 0.5), ec=(0, 0, 0, 1), ls='-', zorder=0))
+            else:# C = 'stress':
+                ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=cm(C[n]), ec=(0, 0, 0, 1), ls='-', zorder=0))
         ax.set_aspect(aspect=1.)
         ax.set_xlim([XC / Data.shape[0] - 1 / Zoom * np.sqrt(Data.shape[0]),
                      XC / Data.shape[0] + 1 / Zoom * np.sqrt(Data.shape[0])])
