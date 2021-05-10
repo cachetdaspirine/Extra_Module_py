@@ -189,6 +189,19 @@ def Disk(L,ParticleType):
                 if Get_Neighbors(State,(i,j),Occupied=True,ParticleType=ParticleType).__len__()== 0:
                     State[i,j] = 0
     return State
+def  Torrus(L,W,ParticleType):
+    Ly,Lx = L,L
+    State = np.full((Ly+1,Lx+1),1)
+    #State = Parallel(L,ParticleType)
+    #State = np.array([[1 for _ in range(Ly+1)] for _ in range(Lx+1)])
+    ij0 = (Lx//2,Ly//2)
+    RMax,RMin = Lx//4,Lx//4-W
+    for i in range(State.shape[0]):
+        for j in range(State.shape[1]):
+            if D(ij0,(i,j),ParticleType) > RMax or D(ij0,(i,j),ParticleType) <= RMin:
+            #if D(ij0,(i,j),ParticleType) <= RMin:
+                State[i,j]=0
+    return State
 def Get_Neighbors(Array,ij,Occupied=False,Free=False,Border=False,ParticleType = 'Triangle'):
         Lx, Ly = Array.shape[0], Array.shape[1]
         if ParticleType == 'Triangle':

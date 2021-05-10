@@ -27,7 +27,8 @@ class SimulToAnalytic:
         elif self.ParticleType == 'Hexagon':
             self.FB = self.fb*np.sqrt(3)/2*(1+self.epsilon)**2
             #self.FB = self.fb * 3*np.sqrt(3)/2*(1./3.+epsilon**2)
-            self.Gamma=2*self.J/(self.l*(1+self.nu)*self.fb*(1/3+epsilon**2)**0.5)
+            #self.J = self.Gamma*(self.l*(1+self.nu)*self.fb*(1/3+epsilon**2))/2
+            self.Gamma=2*self.J/(self.l*(1+self.nu)*self.fb*(1/3+epsilon**2))
         if writting:
             print('nu='+str(self.nu))
             print('lambda='+str(self.la))
@@ -167,14 +168,25 @@ class AnalyticToSimul:
                 print('l='+str(self.l))
 class MatrixToContinuum:
     def __init__(self,Mc,q0,eps1,eps2,Gamma,writting= False):
-        self.Mc,self.q0,self.eps1,self.eps2 = Mc,q0,eps1,eps2
+        self.Mc,self.q0,self.eps1,self.eps2,self.Gamma = Mc,q0,eps1,eps2,Gamma
         S = RSys.System(Mc,q0,np.array([[1]]))
+        self.ParticleType='Hexagon'
         self.FB = S.GetBulkEnergy()
         self.L4MU = Poisson.GetL4MU(Mc,q0)
         self.nu = Poisson.ComputePoissonRatio(Mc,q0)
         self.EigenValues = RMatrix.FindEigenValues(Mc)
         self.Kc = self.EigenValues[-4]
         self.l = np.sqrt(self.L4MU/self.Kc)
+        self.l0 = 1.
+        self.fb = self.FB/np.sqrt(3)*2/(1+self.eps1)**2
+        self.J = self.fb*self.Gamma#self.l*self.fb*(1+self.nu)*self.Gamma/2*self.l0
+    def HRange(self,Nmax):
+        if self.ParticleType == 'Triangle':
+            Size = int(4*(Nmax/6)**0.5+0.5)
+            return np.arange(2,Size,2)
+        elif self.ParticleType == 'Hexagon':
+            Size = int(1./6.* (3+np.sqrt(3*(4*Nmax-1))))
+            return np.arange(1,Size+1,1)
         if writting:
             print('FB = '+str(self.FB))
             print('L4MU = '+str(self.L4MU))

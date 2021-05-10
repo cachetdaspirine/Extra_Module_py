@@ -50,7 +50,7 @@ class BF:
                 return RSys.System(self.Mc,self.q0,State)
             else :
                 Mc,q0 = get_Mc(Parameter = P)
-                return RSys.System(Mc,q0,State)                
+                return RSys.System(Mc,q0,State)
         else :
             return Sys.System(State = State,Parameter = P)
     def CheckInfFiber(self,w,P,type=1):

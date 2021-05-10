@@ -5,8 +5,10 @@ import Shape as Sh
 from MC import *
 
 class BB:
-    def __init__(self,OrderMax,Nmax,P,Expansion=False):
+    def __init__(self,OrderMax,Nmax,P,Expansion=False,Mc=False,q0=False):
         self.Nmax = Nmax
+        self.Mc = Mc
+        self.q0 = q0
         self.Expansion = Expansion
         self.OrderMax = OrderMax+1
         self.Systems = np.empty(self.OrderMax,dtype=object)
@@ -22,7 +24,7 @@ class BB:
                 return RSys.System(self.Mc,self.q0,State)
             else :
                 Mc,q0 = get_Mc(Parameter = P)
-                return RSys.System(Mc,q0,State)                                
+                return RSys.System(Mc,q0,State)
         else :
             return Sys.System(State = State,Parameter = P)
     def Get_E(self,Order,P):

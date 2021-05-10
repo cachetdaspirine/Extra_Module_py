@@ -11,11 +11,38 @@ uxxmin = -0.05
 uxxmax = 0.05
 NPoints = 100
 SystemSize = 1
-def GetEBulk(Mc,q0):
+def GetEBulk(Mc,q0,check=False):
     State=np.full((SystemSize,SystemSize),1)
     Sys = RS.System(Mc, q0, State)
-    return Sys.GetBulkEnergy()
-
+    du = (uxxmax-uxxmin)/NPoints
+     #return Sys.GetBulkEnergy()
+    E = [[0,Sys.GetBulkEnergy()]]
+    for n in range(NPoints+1):
+        uxx=(uxxmax-uxxmin)/NPoints*n+uxxmin
+        if n ==0:
+            E.append( [uxx,Sys.AffineDeformation(uxxmin,uxxmin)] )
+        else :
+            E.append( [uxx,Sys.AffineDeformation(du, du)] )
+    E = np.array(E)
+    if check:
+        plt.scatter(E[:,0],E[:,1])
+    return E[np.argmin(E[:,1])]
+def GetEBulk2(Mc,q0,check=False):
+    State=np.full((SystemSize,SystemSize),1)
+    Sys = RS.System(Mc, q0, State)
+    du = (uxxmax-uxxmin)/NPoints
+     #return Sys.GetBulkEnergy()
+    E = [[0,Sys.GetBulkEnergy()]]
+    for n in range(NPoints+1):
+        uxx=(uxxmax-uxxmin)/NPoints*n+uxxmin
+        if n ==0:
+            E.append( [uxx,Sys.AffineDeformation(uxxmin,-uxxmin)] )
+        else :
+            E.append( [uxx,Sys.AffineDeformation(du, -du)] )
+    E = np.array(E)
+    if check:
+        plt.scatter(E[:,0],E[:,1])
+    return E[np.argmin(E[:,1])]
 def GetL4MU(Mc=0, q0=0,check=False,Parameter = None):
     # Computation variables
     l4mu = list()

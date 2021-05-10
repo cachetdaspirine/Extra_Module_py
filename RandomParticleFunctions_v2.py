@@ -11,7 +11,7 @@ import numpy as np
 ########################################################
 ########################################################
 ########################################################
-def RandomParticle(seed_temp):
+def RandomParticle(seed_temp,pressure):
     n_t = 2
     ##########################
     np.random.seed(seed_temp)
@@ -21,6 +21,7 @@ def RandomParticle(seed_temp):
     for ind_i in range(12):
         m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t
     q0_vec,eps1,eps2 = RandomPositions(seed_temp)
+    m_ij+=AreaMatrix(pressure)
     ##########################
     ## symmetrize
     ##########################
@@ -65,7 +66,7 @@ def RandomPositions(seed_temp):
     ##########################
     np.random.seed(seed_temp)
     ## Two random epsilon
-    epsilon_1 = np.random.rand(1)[0]/10.0
+    epsilon_1 = 0.1#np.random.rand(1)[0]/10.0
     epsilon_2 = 0.#np.random.rand(1)[0]/10.0
     ## Regular Hexagon
     ell2 = 1.0 + epsilon_1
@@ -267,25 +268,32 @@ def PrintMij(m_ij_t):
 def FindEigenValues(m_ij_t):
     res = np.linalg.eigh(m_ij_t)
     eign = res[0]
+    #return res
     return eign
 ########################################################
 ########################################################
 ########################################################
 ########################################################
+# def AreaMatrix(pressure):
+    # m_ij_A = np.zeros([12,12])
+    # for ind_i in range(12):
+        # for ind_j in range(12):
+            # temp_add = 0.0
+            # if ind_i%2==0 and (ind_i+3)%12==ind_j:
+                # temp_add = pressure/4.0
+            # elif ind_j%2==0 and (ind_j+3)%12==ind_i:
+                # temp_add = pressure/4.0
+            # elif ind_i%2==1 and (ind_i+1)%12==ind_j:
+                # temp_add = - pressure/4.0
+            # elif ind_j%2==1 and (ind_j+1)%12==ind_i:
+                # temp_add = - pressure/4.0
+            # m_ij_A[ind_i, ind_j] = temp_add
+
 def AreaMatrix(pressure):
-    m_ij_A = np.zeros([12,12])
-    for ind_i in range(12):
-        for ind_j in range(12):
-            temp_add = 0.0
-            if ind_i%2==0 and (ind_i+3)%12==ind_j:
-                temp_add = pressure/4.0
-            elif ind_j%2==0 and (ind_j+3)%12==ind_i:
-                temp_add = pressure/4.0
-            elif ind_i%2==1 and (ind_i+1)%12==ind_j:
-                temp_add = - pressure/4.0
-            elif ind_j%2==1 and (ind_j+1)%12==ind_i:
-                temp_add = - pressure/4.0
-            m_ij_A[ind_i, ind_j] = temp_add
+    m_ij_A = np.zeros((12,12),dtype=float)
+    for i in range(12):
+        m_ij_A[i,(i+3)%12]+=(1-2*(i%2)) * pressure
+    m_ij_A = (m_ij_A+np.transpose(m_ij_A))
     return m_ij_A
 ########################################################
 ########################################################

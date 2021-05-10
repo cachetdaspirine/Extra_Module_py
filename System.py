@@ -2,6 +2,7 @@ import os
 import matplotlib.colors as mcolors
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.collections import PatchCollection
+from matplotlib.collections import PolyCollection
 import matplotlib.lines as mlines
 from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
@@ -441,19 +442,26 @@ class System:
                     XY.append([ligne[0],ligne[1]])
                     Xc+=ligne[0]
                     Yc+=ligne[1]
-                else:
-                    norm = ((ligne[2] - ligne[0])**2 + (ligne[3] - ligne[1])**2)**0.5
-                    Color+=abs(norm-ligne[5])/(norm+ligne[5])/6.
+                #else:
+                norm = ((ligne[2] - ligne[0])**2 + (ligne[3] - ligne[1])**2)**0.5
+                #Color+=abs(norm-ligne[5])/(norm+ligne[5])/6.
+                if ligne[5]==1-self.eps or ligne[5] == 1+self.eps:
+                    Color+=(norm-ligne[5])**2/12.*self.Kmain
+                else :
+                    Color+=(norm-ligne[5])**2/12.*self.Kcoupling
             Hex.append(XY)
             C.append(Color)
         if Cmax:
-            C = (np.asarray(C)/Cmax-0.5)*2
+            C = (np.asarray(C)/Cmax)#-0.5)*2
         else:
             #print(max(C))
             C = (C/max(C))
-        for n,XY in enumerate(Hex):
-            ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=True, fc=cm(C[n]),
-            ec=(0, 0, 0, 1), ls='-', zorder=0))
+        #for n,XY in enumerate(Hex):
+            #ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=True, fc=cm(C[n]),
+            #ec=(0, 0, 0, 1), ls='-', zorder=0))
+        coll = PolyCollection(Hex,array=C, closed=True, linewidth=0.8, cmap=cm, ec=(0,0,0,1), ls='-', zorder=0)
+        ax.add_collection(coll)
+        fig.colorbar(coll, ax=ax)
         Xc = Xc/(6*Data.shape[0])
         Yc = Yc/(6*Data.shape[0])
         ax.set_xlim([Xc - 1 / Zoom * np.sqrt(Data.shape[0]),
@@ -483,7 +491,7 @@ class System:
         if type(Data[0]) != np.ndarray:
             Data = np.array([Data])
         for ligne in Data:
-            if ligne[5]>0.8:
+            if True:#ligne[5]>0.8:
                 X1 = np.append(X1, ligne[0])
                 Y1 = np.append(Y1, ligne[1])
                 X2 = np.append(X2, ligne[2])
@@ -494,20 +502,20 @@ class System:
         # Colorlim=(min(C0),max(C0))
         #Colorlim = (min(((C1 - C0) / (C0))), max(((C1 - C0) / (C0))))
         # if eps != 0:
-        #    Colorlim = (0,eps)
+        #Colorlim = (0,0.1)
         XC = sum(X1) / X1.shape[0]
         YC = sum(Y1) / Y1.shape[0]
 
-        # self.MAP=cm
+        self.MAP=cm2
         ax.set_xlim([XC - 1 / Zoom * np.sqrt(Data.shape[0] / 12.),
                      XC + 1 / Zoom * np.sqrt(Data.shape[0] / 12.)])
         ax.set_ylim([YC - 1 / Zoom * np.sqrt(Data.shape[0] / 12.),
                      YC + 1 / Zoom * np.sqrt(Data.shape[0] / 12.)])
-        plot = ax.quiver(X1, Y1, X2 - X1, Y2 - Y1, abs(C0-C1),
-                         scale=1.0, angles='xy', scale_units='xy', width=0.006, minlength=0., headlength=0.,
+        plot = ax.quiver(X1, Y1, X2 - X1, Y2 - Y1, (C0-C1+1)/2,
+                         scale=1.0, angles='xy', scale_units='xy', width=0.003, minlength=0., headlength=0.,
                          headaxislength=0., headwidth=0., alpha=1, edgecolor='k', cmap=self.MAP)#, clim=Colorlim)
         # if eps != 0:
-        plot.set_clim((0,0.005))
+        #plot.set_clim((0.,0.005))
         if Colorbar:
             fig.colorbar(plot, ax=ax)
         ax.set_aspect(aspect=1.)
