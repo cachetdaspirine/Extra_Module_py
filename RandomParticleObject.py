@@ -1,25 +1,66 @@
-########################################################
-## Functions that are used for the comparison between  #
-## particle model and continuum model                  #
-########################################################
-########################################################
 import math
 from scipy.optimize import minimize
+from scipy.optimize import brentq,newton
 import numpy as np
-########################################################
-########################################################
-########################################################
-########################################################
-########################################################
+import MeasurePoisson as MP
+import random as rd
+import matplotlib.pyplot as plt
 
-def RandomParticle(seed_temp,pressure):
+class Mcq0:
+    def __init__(self,seed=None,Ell=None,R=None,Pressure=0,percent=1,*argv,**kwargs):
+        #np.random.seed(seed)
+        #rd.seed(seed)
+        if R:
+            self.Pressure=Pressure
+            self.R = R
+            self.Mc,self.q0,self.e1,self.e2 = RandomParticle(R,percent=percent,pressure=Pressure)
+        else:
+            self.Mc,self.q0,self.e1,self.e2 = self.GetSteadyParticle(seed,pressure=0,percent=percent)
+        if Ell:
+            # if a value is given for one eigen value, then GetPressure
+            # is going to try to find the correct pressure to tune a soft mode
+            # to the value asked. If the value of the softmode is too high, it can fail
+            EigenModeValue = MP.GetL4MU(self.Mc,self.q0)/Ell
+            self.Pressure = GetPressure(self.R,EigenModeValue)
+            self.Mc,self.q0,self.e1,self.e2 = RandomParticle(self.R,self.Pressure)
+            self.Ell = MP.GetL4MU(self.Mc,self.q0)/EigenModeValue
+
+        if kwargs.get('CheckEigen'):
+            eigen = list()
+            for p in np.arange(-1,1.,0.1):
+                Mc,q0,e1,e2 = RandomParticle(self.R,p)
+                arr = np.append(np.asarray(FindEigenValues(Mc)),p)
+                if arr[0]>-10**-10:
+                    eigen.append(arr[3])
+                else :
+                    eigen.append(arr[0])
+            eigen = np.array(eigen)
+            plt.plot(np.arange(-1,1.,0.1),eigen)
+        if kwargs.get('GetPoisson'):
+            self.FB,Gamma = MP.FindBestRegularHexagon(self.Mc,self.q0)
+            self.nu = MP.ComputePoissonRatio(self.Mc,self.q0)
+        if kwargs.get('CheckBulk'):
+            self.RealFB = MP.GetRealBulk(self.Mc,self.q0)
+    def GetSteadyParticle(self,seed=None,pressure=0.,percent=1):
+        if seed:
+            rd.seed(seed)
+        self.R = rd.randint(0,1000000)
+        Mc,q0,e1,e2 = RandomParticle(self.R,pressure,percent=percent)
+        while FindEigenValues(Mc)[0]<-10**(-10):
+            self.R = rd.randint(0,1000000)
+            Mc,q0,e1,e2 = RandomParticle(self.R,pressure,percent=percent)
+        return Mc,q0,e1,e2
+def RandomParticle(seed_temp,pressure,percent=1):
     n_t = 2
     ##########################
     np.random.seed(seed_temp)
     ## Random matrix
-    #m_ij = np.random.rand(12,12)
-    #random exponential distrib matrix
+    #if self.distribution == 'Exponential':
+        #random exponential distrib matrix
     m_ij = np.random.exponential(3.,(12,12))
+    #else :
+    #m_ij = np.random.rand(12,12)
+
     ##########################
     for ind_i in range(12):
         m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t
@@ -36,37 +77,27 @@ def RandomParticle(seed_temp,pressure):
     m_ij = ApplyTranslationalSymmetry(m_ij)
     ## Rotational symmetry
     m_ij = ApplyRotationalSymmetry(m_ij, q0_vec)
+    #if self.BulkRotationalSymmetry:
     q0R = np.array([(1)/(2*3**0.5),(1)/2.,-(1)/(2*3**0.5),(1)/2.,-(1)/3**0.5,0.,-(1)/(2*3**0.5),-(1)/2.,(1)/(2*3**0.5),-(1)/2,(1)/(3**0.5),0.])
     m_ij = ApplyRotationalSymmetry(m_ij,q0R)
-    ## Rotate m_ij and q0 to match Hugo's order of nodes
-    #Exchange the index 0 into 5
-    #for X
-    #q0_vec = np.append(q0_vec,q0_vec[0])
-    #q0_vec = np.delete(q0_vec,0)
-    # for Y
-    #q0_vec = np.append(q0_vec,q0_vec[0])
-    #q0_vec = np.delete(q0_vec,0)
-    #Exchange the column 0 into 5
-    #for X
-    #m_ij = np.append(m_ij,m_ij[:,0][:,np.newaxis],axis=1)
-    #m_ij = np.delete(m_ij,0,axis = 1)
-    #for Y
-    #m_ij = np.append(m_ij,m_ij[:,0][:,np.newaxis],axis=1)
-    #m_ij = np.delete(m_ij,0,axis = 1)
-    #Exchange the line 0 into 5
-    #for X
-    #m_ij = np.append(m_ij,m_ij[0][np.newaxis,:],axis=0)
-    #m_ij = np.delete(m_ij,0,axis=0)
-    #for Y
-    #m_ij = np.append(m_ij,m_ij[0][np.newaxis,:],axis=0)
-    #m_ij = np.delete(m_ij,0,axis=0)
     ##########################
     ##########################
+    m_ij = TuneSoftMode(m_ij,percent)
     return (m_ij, q0_vec,eps1,eps2)
 ########################################################
 ########################################################
 ########################################################
 ########################################################
+def GetPressure(R,EigenModeValue):
+    def GetSoftMode(pressure):
+        Mc,q0,e1,e2 = RandomParticle(R,pressure)
+        EigenValues = FindEigenValues(Mc)
+        if EigenValues[0]>-10**-10:
+            return EigenValues[3]-EigenModeValue
+        else:
+            return EigenValues[0]-EigenModeValue
+    #return brentq(GetSoftMode,-1,1)#,args=(R))
+    return newton(GetSoftMode,0.)
 def RandomPositions(seed_temp):
     ##########################
     np.random.seed(seed_temp)
@@ -76,16 +107,6 @@ def RandomPositions(seed_temp):
     ## Regular Hexagon
     ell2 = 1.0 + epsilon_1
     q0_vec = np.zeros(12)
-    # q0_vec[0] = 1.0 * l0
-    # q0_vec[1] = 0.0
-    # q0_vec[2] = ell2*math.cos(math.pi/3 + epsilon_2) * l0
-    # q0_vec[3] = ell2*math.sin(math.pi/3 + epsilon_2) * l0
-    # q0_vec[4] = -1.0/2.0 * l0
-    # q0_vec[5] = math.sqrt(3.0/4.0) *l0
-    # q0_vec[6] = ell2*math.cos(math.pi + epsilon_2) *l0
-    # q0_vec[7] = ell2*math.sin(math.pi + epsilon_2)*l0
-    # q0_vec[8] = -1.0/2.0*l0
-    # q0_vec[9] = -math.sqrt(3.0/4.0)*l0
     q0_vec[0] = 0.5774 * (1+epsilon_1) * math.cos(math.pi/3+epsilon_2)
     q0_vec[1] = 0.5774 * (1+epsilon_1) * math.sin(math.pi/3+epsilon_2)
 
@@ -275,25 +296,6 @@ def FindEigenValues(m_ij_t):
     eign = res[0]
     #return res
     return eign
-########################################################
-########################################################
-########################################################
-########################################################
-# def AreaMatrix(pressure):
-    # m_ij_A = np.zeros([12,12])
-    # for ind_i in range(12):
-        # for ind_j in range(12):
-            # temp_add = 0.0
-            # if ind_i%2==0 and (ind_i+3)%12==ind_j:
-                # temp_add = pressure/4.0
-            # elif ind_j%2==0 and (ind_j+3)%12==ind_i:
-                # temp_add = pressure/4.0
-            # elif ind_i%2==1 and (ind_i+1)%12==ind_j:
-                # temp_add = - pressure/4.0
-            # elif ind_j%2==1 and (ind_j+1)%12==ind_i:
-                # temp_add = - pressure/4.0
-            # m_ij_A[ind_i, ind_j] = temp_add
-
 def AreaMatrix(pressure):
     m_ij_A = np.zeros((12,12),dtype=float)
     for i in range(12):
@@ -317,6 +319,12 @@ def AddAreaMatrices(m_ij, q0_vec, pressure):
     A_vec_temp = m_ij_A.dot(q0_vec)
     ##
     return (m_ij_temp, A_vec_temp)
+def TuneSoftMode(m_ij,percent=0.9):
+    Eigen,Vectors = np.linalg.eigh(m_ij)
+    Eigen[3] = Eigen[3]*percent
+    #Eigen[4] = Eigen[4]*percent
+    return np.dot(Vectors,np.dot(np.diag(Eigen),np.linalg.inv(Vectors)))
+
 ########################################################
 ########################################################
 ########################################################

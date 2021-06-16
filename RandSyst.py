@@ -42,6 +42,12 @@ libRand.AffineDeformation.restype = c_double
 libRand.Extension.argtypes = [POINTER(c_void_p),c_int]
 libRand.Extension.restype = c_double
 
+libRand.GetNDOF.argtypes = [POINTER(c_void_p)]
+libRand.GetNDOF.restypes = c_int
+
+libRand.GetHessian.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
+libRand.GetGradient.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
+
 cdict = {'blue':   ((0.0,  0.9, 0.9),
                     (0.5,  0.4, 0.4),
                     (1.0,  0.1, 0.1)),
@@ -133,6 +139,20 @@ class System:
         #print('delete the system')
         self.lib.DeleteSystem(self.Adress)
 
+    def get_Hessian(self):
+        NDOF = self.lib.GetNDOF(self.Adress)
+        length = 2*NDOF
+        Hessian = np.zeros(length*length,dtype=np.double)
+        #Arraycpp =
+        self.lib.GetHessian(self.Adress, Hessian.ctypes.data_as(POINTER(c_double)) , length)
+        return np.reshape(Hessian,(-1,length))
+    def get_Gradient(self):
+        NDOF = self.lib.GetNDOF(self.Adress)
+        length= 2 * NDOF
+        Gradient = np.zeros(length,dtype=np.double)
+        self.lib.GetGradient(self.Adress,Gradient.ctypes.data_as(POINTER(c_double)),length)
+        return Gradient
+
     def GetBulkEnergy(self):
         return self.lib.GetBulkEnergy(self.Adress)
 
@@ -154,7 +174,7 @@ class System:
         if NewState.shape[0] != self.Lx or NewState.shape[1] != self.Ly:
             # if we changed the size of the system, we remake the whole system
             self.Lx = NewState.shape[0]
-            self.Ly = NewState.shape[1]
+            self.Ly = NewState.shape[ju1]
             self.lib.DeleteSystem(self.Adress)
 
             MC = copy.copy(self.CouplingMatrix.flatten())
@@ -223,7 +243,10 @@ class System:
                 ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=(
                     0.41, 0.83, 0.94, 0.5), ec=(0, 0, 0, 1), ls='-', zorder=0))
         else:# C = 'stress':
-            coll = PolyCollection(Hex,array=C, closed=True, linewidth=0.8, cmap=cm, ec=(0,0,0,1), ls='-', zorder=0)
+            if Fill:
+                coll = PolyCollection(Hex,array=C, closed=True, linewidth=0.8, cmap=cm, ec=(0,0,0,1), ls='-', zorder=0)
+            else :
+                coll = PolyCollection(Hex,facecolors = 'none', closed=True, linewidth=0.8, cmap=cm, ec=(0,0,0,1), ls='-', zorder=0)
             ax.add_collection(coll)
             fig.colorbar(coll, ax=ax)
             #ax.add_patch(Polygon(XY, closed=True, linewidth=0.8, fill=Fill, fc=cm(C[n]), ec=ec, ls='-', zorder=0))

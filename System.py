@@ -444,11 +444,11 @@ class System:
                     Yc+=ligne[1]
                 #else:
                 norm = ((ligne[2] - ligne[0])**2 + (ligne[3] - ligne[1])**2)**0.5
-                #Color+=abs(norm-ligne[5])/(norm+ligne[5])/6.
-                if ligne[5]==1-self.eps or ligne[5] == 1+self.eps:
-                    Color+=(norm-ligne[5])**2/12.*self.Kmain
-                else :
-                    Color+=(norm-ligne[5])**2/12.*self.Kcoupling
+                Color+=abs(norm-ligne[5])/(norm+ligne[5])/6.
+                #if ligne[5]==1-self.eps or ligne[5] == 1+self.eps:
+                #    Color+=(norm-ligne[5])**2/3.*self.Kmain
+                #else :
+                    #Color+=(norm-ligne[5])**2/12.*self.Kcoupling
             Hex.append(XY)
             C.append(Color)
         if Cmax:

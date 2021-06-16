@@ -32,6 +32,12 @@ class BD:
                 return RSys.System(Mc,q0,State)
         else :
             return Sys.System(State = State,Parameter = P)
+    def Get_EN(self,P):
+        Elist = list()
+        for n in range(self.Range.shape[0]):
+            Elist.append([self.Get_E(n,P),self.NList[n]])
+        Elist = np.array(Elist)
+        return Elist
     def Get_E(self,n,P):
         if n>= self.Range.shape[0]:
             n=-1
