@@ -6,20 +6,59 @@
 import math
 from scipy.optimize import minimize
 import numpy as np
+import MeasurePoisson as MP
+from scipy.optimize import brentq
 ########################################################
 ########################################################
 ########################################################
 ########################################################
 ########################################################
-def RandomParticle(seed_temp, n_t):
+def RandomParticle(seed=None,length=None,resolution=0.01,distribution='uniform'):
+    if seed:
+        np.random.seed(seed)
+    Mc1,rho0,eps1,eps2 = RandomMatrix(np.random.randint(0,10000000),distribution)
+    #Mc2 = RandomMatrix(np.random.randint(0,10000000))[0]
+    Mc2 = np.zeros((9,9),dtype=float)
+    Mc2[3,4],Mc2[3,5],Mc2[4,5]=1.,1.,1.
+    Mc2[6,7],Mc2[6,8],Mc2[7,8] = 1.,1.,1.
+    Mc2+=Mc2.T
+    Mc2[3,3],Mc2[4,4],Mc2[5,5]=-1.,-1.,-1.
+    Mc2[6,6],Mc2[7,7],Mc2[8,8]=-1.,-1.,-1.
+    Pmin,Pmax = GetInterval(Mc1,Mc2,resolution)
+    valmin = np.linalg.eigh(Mc1+Pmin*Mc2)[0][0]
+    valmax = np.linalg.eigh(Mc1+Pmax*Mc2)[0][0]
+    def getlength(P):
+        Mc = Mc1+P*Mc2
+        val,vect = np.linalg.eigh(Mc)
+        L4MU = MP.GetL4MU(Mc,rho0)
+        Lambda = MP.GetLambda(Mc,rho0)
+        L2MU = 0.5*(L4MU+Lambda)
+        kappa = L2MU/(2*length**2)
+        return val[0]-kappa
+    P = brentq(getlength,a=Pmin,b=Pmax,xtol=resolution)
+    return Mc1+P*Mc2, rho0,eps1,eps2
+def GetInterval(Mc1,Mc2,resolution):
+    Nmax = int(5//resolution)
+    for P in np.linspace(0.,5.,Nmax):
+        val,vect = np.linalg.eigh(Mc1+P*Mc2)
+        if val[0]<0.:
+            Pmax = P-resolution # return the step before
+            break
+    return 0.,Pmax
+def RandomMatrix(seed=None,distribution='uniform'):
+    n_t=2
     ##########################
-    np.random.seed(seed_temp)
+    if seed:
+        np.random.seed(seed)
     ## Random matrix
-    m_ij = np.random.rand(9,9)
+    if distribution=='uniform':
+        m_ij = np.random.rand(9,9)
+    elif distribution=='exponential' or distribution=='exp':
+        m_ij = np.random.exponential(3.,(9,9))
     ##########################
     for ind_i in range(9):
         m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t
-    rho0_vec = RandomPositions(seed_temp)
+    rho0_vec,eps1,eps2 = RandomPositions(seed)
     ##########################
     ## symmetrize
     ##########################
@@ -29,14 +68,15 @@ def RandomParticle(seed_temp, n_t):
     m_ij = MakeSymmetricMatrix(m_ij)
     ##########################
     ##########################
-    return (m_ij, rho0_vec)
+    return (m_ij, rho0_vec,eps1,eps2)
 ########################################################
 ########################################################
 ########################################################
 ########################################################
-def RandomPositions(seed_temp):
+def RandomPositions(seed=None):
     ##########################
-    np.random.seed(seed_temp)
+    if seed:
+        np.random.seed(seed)
     ## Two random epsilon
     epsilon_1 = 0.01#np.random.rand(1)/10.0
     epsilon_2 = 0.#np.random.rand(1)/10.0
@@ -78,7 +118,7 @@ def RandomPositions(seed_temp):
                                     +(q0_vec[ind1+1]-q0_vec[ind2+1])\
                                     *(q0_vec[ind1+1]-q0_vec[ind2+1]))
     ##
-    return rho0_vec
+    return rho0_vec, epsilon_1, epsilon_2
 ########################################################
 ########################################################
 ########################################################
