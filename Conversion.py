@@ -47,7 +47,7 @@ class SimulToAnalytic:
             #return np.arange(4,Size,4)
             #clean disk
             Size = self.Size(Nmax)
-            return np.arange(1,Size,1)
+            return np.arange(4,Size,4)
         elif self.ParticleType == 'Hexagon':
             #Size = int(0.5* (1+np.sqrt(1+8*Nmax)))
             #return np.arange(1,Size,1)
@@ -119,7 +119,7 @@ class AnalyticToSimul:
             #return np.arange(4,Size,4)
             #clean disk
             Size = self.Size(Nmax)
-            return np.arange(1,Size,1)
+            return np.arange(4,Size,4)
         elif self.ParticleType == 'Hexagon':
             #Size = int(0.5* (1+np.sqrt(1+8*Nmax)))
             #return np.arange(1,Size,1)

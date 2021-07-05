@@ -1,6 +1,6 @@
 import RandSyst as RS
 import System as S
-from RandomParticleFunctions_v2 import *
+from RandomParticleFunctions_v4 import *
 from scipy.optimize import curve_fit
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt

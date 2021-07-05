@@ -142,6 +142,8 @@ def Fiber(Width,Length,ParticleType='Triangle',type=1):
             return Fiber4(Width,Length)
         elif type == 2:
             return Fiber3(Width,Length)
+        elif type == 3:
+            return Fiber2(Width,Length)
 def Fiber2(W,L):
     if W==1:
         return Fiber4(W,L)
@@ -188,7 +190,14 @@ def Disk(L,ParticleType):
             for j in range(State.shape[1]):
                 if Get_Neighbors(State,(i,j),Occupied=True,ParticleType=ParticleType).__len__()== 0:
                     State[i,j] = 0
+        AdjustDisk(State,ParticleType)
     return State
+def AdjustDisk(State,ParticleType):
+    for i in range(State.shape[0]):
+        for j in range(State.shape[1]):
+            if State[i,j]==0:
+                if Get_Neighbors(State,(i,j),Occupied=True,ParticleType=ParticleType).__len__()>=2:
+                    State[i,j]=1
 def  Torrus(L,W,ParticleType):
     Ly,Lx = L,L
     State = np.full((Ly+1,Lx+1),1)
@@ -265,7 +274,10 @@ def Lacunar(Size, Order =1, ParticleType='Triangle'):
     if Ly%2 ==1 :
         Ly+=1
     # initialize the list of the particle to remove
-    To_Delete = {(Lx,Ly)}
+    if ParticleType == 'Hexagon':
+        To_Delete = {(Lx,Ly)}
+    else :
+        To_Delete = {(Lx-1,Ly),(Lx,Ly)}
     while To_Delete.__len__()!= 0:
         # Stor the initial To_delete
         #Old_To_Delete = To_Delete.copy()
@@ -293,3 +305,5 @@ def Get_Lacune(ij,Order,ParticleType):
         return [(j,j+2),(i+2,j),(i+2,j-2),(i,j-2),(i-2,j),(i-2,j+2)]
     if Order == 2 and ParticleType == 'Hexagon':
         return [(i-2,j+4),(i+2,j+2),(i+4,j-2),(i+2,j-4),(i-2,j-2),(i-4,j+2)]
+    if ParticleType=='Triangle':
+        return [(i+4,j),(i+2,j+2),(i-2,j+2),(i-4,j),(i-2,j-2),(i+2,j-2)]

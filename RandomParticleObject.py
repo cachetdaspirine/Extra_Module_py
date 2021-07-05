@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from RandomParticleFunctions_v4 import *
 
 class Mcq0:
-    def __init__(self,seed=None,length=None,distribution='uniform',*argv,**kwargs):
+    def __init__(self,seed=None,length=None,distribution='uniform',n_t=2,*argv,**kwargs):
         if seed:
             self.seed = seed
             np.random.seed(seed)
@@ -16,12 +16,12 @@ class Mcq0:
         else :
             self.seed = np.random.randint(0,100000000)
         if length :
-            self.Mc, self.rho0, self.e1,self.e2 = RandomParticle(self.seed,length,distribution=distribution)
+            self.Mc, self.rho0, self.e1,self.e2 = RandomParticle(self.seed,length,distribution=distribution,n_t=n_t)
             self.length=length
             self.vals,self.vect = np.linalg.eigh(self.Mc)
         else :
             self.length = 0.
-            self.Mc, self.rho0, self.e1,self.e2 = RandomMatrix(self.seed,distribution=distribution)
+            self.Mc, self.rho0, self.e1,self.e2 = RandomMatrix(self.seed,distribution=distribution,n_t=n_t)
             self.vals,self.vect = np.linalg.eigh(self.Mc)
         if kwargs.get('CheckEigen'):
             eigen = list()

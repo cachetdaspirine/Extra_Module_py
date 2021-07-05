@@ -79,8 +79,9 @@ class BF:
         #np.savetxt('Energy.txt',E)
         print('a, b = '+str(popt))
         fig,ax = plt.subplots()
-        ax.plot(self.Aspect,line(self.Aspect,popt[0],popt[1]))
-        ax.scatter(self.Aspect,E)
+        ax.plot(self.Aspect,line(self.Aspect,popt[0],popt[1])/P.FB,label='Fit')
+        ax.scatter(self.Aspect,E/P.FB,label='Simulation')
+        #fig.legend()
         return fig, ax
     def Get_E(self,w,P,type=0):
         if P.ParticleType == 'Triangle':

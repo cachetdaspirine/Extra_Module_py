@@ -2,7 +2,20 @@ import numpy as np
 import System as Sys
 import RandSyst as RSys
 import Shape as Sh
+from scipy.optimize import curve_fit
 from MC import *
+
+def line(x,a,b):
+    return a*x+b
+def GetRealBulk(P,*arg,**kwargs):
+    Size = [10,15,20]
+    E = list()
+    for s in Size:
+        NP = Sh.Np(Sh.Parallel(s,ParticleType=P.ParticleType))
+        E.append([NP,Sys.System(Sh.Parallel(s,ParticleType=P.ParticleType),Parameter = P).Energy/NP])
+    E = np.array(E)
+    p, conv = curve_fit(line, 1/E[:, 0], E[:, 1], p0=[0, 0])
+    return p[1]
 
 class BB:
     def __init__(self,OrderMax,Nmax,P,Expansion=False,Mc=False,q0=False):

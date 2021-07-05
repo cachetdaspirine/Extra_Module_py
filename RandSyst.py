@@ -16,37 +16,63 @@ from ctypes import c_void_p
 from ctypes import c_char_p
 import copy
 
-libRand = cdll.LoadLibrary(
+lib1 = cdll.LoadLibrary(
     str(pathlib.Path(__file__).parent.absolute()) + '/libRand.so')
 
-libRand.CreateSystem.restype = POINTER(c_void_p)
-libRand.CreateSystem.argtypes = [POINTER(c_int), POINTER(c_double), POINTER(c_double), c_int, c_int]
-libRand.DeleteSystem.argtypes = [POINTER(c_void_p)]
-libRand.CopySystem.argtypes = [POINTER(c_void_p)]
-libRand.CopySystem.restype = POINTER(c_void_p)
+lib1.CreateSystem.restype = POINTER(c_void_p)
+lib1.CreateSystem.argtypes = [POINTER(c_int), POINTER(c_double), POINTER(c_double), c_int, c_int]
+lib1.DeleteSystem.argtypes = [POINTER(c_void_p)]
+lib1.CopySystem.argtypes = [POINTER(c_void_p)]
+lib1.CopySystem.restype = POINTER(c_void_p)
 
-libRand.UpdateSystemEnergy.argtypes = [
+lib1.UpdateSystemEnergy.argtypes = [
     POINTER(c_void_p), POINTER(c_int), c_int, c_int]
-libRand.GetSystemEnergy.restype = c_double
-libRand.GetSystemEnergy.argtypes = [POINTER(c_void_p)]
+lib1.GetSystemEnergy.restype = c_double
+lib1.GetSystemEnergy.argtypes = [POINTER(c_void_p)]
 
-libRand.OutputSystemSite.argtypes = [POINTER(c_void_p), c_char_p]
+lib1.OutputSystemSite.argtypes = [POINTER(c_void_p), c_char_p]
 
-libRand.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
-libRand.GetBulkEnergy.restype = c_double
+lib1.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
+lib1.GetBulkEnergy.restype = c_double
 
 
-libRand.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
-libRand.AffineDeformation.restype = c_double
+lib1.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
+lib1.AffineDeformation.restype = c_double
 
-libRand.Extension.argtypes = [POINTER(c_void_p),c_int]
-libRand.Extension.restype = c_double
+lib1.Extension.argtypes = [POINTER(c_void_p),c_int]
+lib1.Extension.restype = c_double
 
-libRand.GetNDOF.argtypes = [POINTER(c_void_p)]
-libRand.GetNDOF.restypes = c_int
+lib1.GetNDOF.argtypes = [POINTER(c_void_p)]
+lib1.GetNDOF.restypes = c_int
 
-libRand.GetHessian.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
-libRand.GetGradient.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
+lib1.GetHessian.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
+lib1.GetGradient.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
+
+lib2 = cdll.LoadLibrary(
+    str(pathlib.Path(__file__).parent.absolute()) + '/libRand2.so')
+
+lib2.CreateSystem.restype = POINTER(c_void_p)
+lib2.CreateSystem.argtypes = [POINTER(c_int), POINTER(c_double), POINTER(c_double), c_int, c_int]
+lib2.DeleteSystem.argtypes = [POINTER(c_void_p)]
+lib2.CopySystem.argtypes = [POINTER(c_void_p)]
+lib2.CopySystem.restype = POINTER(c_void_p)
+
+lib2.UpdateSystemEnergy.argtypes = [
+    POINTER(c_void_p), POINTER(c_int), c_int, c_int]
+lib2.GetSystemEnergy.restype = c_double
+lib2.GetSystemEnergy.argtypes = [POINTER(c_void_p)]
+
+lib2.OutputSystemSite.argtypes = [POINTER(c_void_p), c_char_p]
+
+lib2.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
+lib2.GetBulkEnergy.restype = c_double
+
+
+lib2.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
+lib2.AffineDeformation.restype = c_double
+
+lib2.Extension.argtypes = [POINTER(c_void_p),c_int]
+lib2.Extension.restype = c_double
 
 cdict = {'blue':   ((0.0,  0.9, 0.9),
                     (0.5,  0.4, 0.4),
@@ -81,8 +107,10 @@ class System:
         # the pointer toward the cpp object. Each time we call a c++ function
         # we have to give it the adress of the  pointer,  that  the  function
         # will interpret as a pointer toward the c++ object
-
-        self.lib = libRand
+        if q0.shape[0]==12:
+            self.lib = lib2
+        elif q0.shape[0]==9:
+            self.lib = lib1
         self.Lx = State.shape[0]  # X size of the system !!!!!
         self.Ly = State.shape[1]  # Y size of the system !!!!!
         # --------------Convert the array into a pointer array---------------
@@ -124,12 +152,15 @@ class System:
 
 
     def Copy(self, old_system):
-        self.lib = libRand
         self.Lx = old_system.Lx
         self.Ly = old_system.Ly
         self.state = old_system.state
         self.CouplingMatrix = old_system.CouplingMatrix
         self.q0 = old_system.q0
+        if self.q0==12:
+            self.lib = lib2
+        elif self.q0==9:
+            self.lib = lib1
         self.ActualizeNp()
         self.Adress = self.lib.CopySystem(old_system.Adress)
         self.Energy = self.lib.GetSystemEnergy(self.Adress)
@@ -140,12 +171,20 @@ class System:
         self.lib.DeleteSystem(self.Adress)
 
     def get_Hessian(self):
-        NDOF = self.lib.GetNDOF(self.Adress)
-        length = 2*NDOF
-        Hessian = np.zeros(length*length,dtype=np.double)
+        NDOF = 2*self.lib.GetNDOF(self.Adress)
+        Hessian = np.zeros(NDOF*NDOF,dtype=np.double)
         #Arraycpp =
-        self.lib.GetHessian(self.Adress, Hessian.ctypes.data_as(POINTER(c_double)) , length)
-        return np.reshape(Hessian,(-1,length))
+        self.lib.GetHessian(self.Adress, Hessian.ctypes.data_as(POINTER(c_double)) , NDOF)
+        return np.reshape(Hessian,(-1,NDOF))
+
+    def get_IndexList(self):
+        NDOF = self.lib.GetNDOF(self.Adress)
+        Is = np.zeros(NDOF,dtype=int)
+        Js = np.zeros(NDOF,dtype=int)
+        Ks = np.zeros(NDOF,dtype = int)
+        Xs = np.zeros(NDOF,dtype=bool)
+
+
     def get_Gradient(self):
         NDOF = self.lib.GetNDOF(self.Adress)
         length= 2 * NDOF
@@ -195,17 +234,20 @@ class System:
             self.lib.UpdateSystemEnergy(
                 self.Adress, Arraycpp, self.Lx, self.Ly)
             self.Energy = self.lib.GetSystemEnergy(self.Adress)
+
     def PrintPerSite(self, Name='NoName.txt'):
         # output the sytem per site (easier if you wanna plot the sites).
         if self.Np < 1:
             print("can t output an empty system")
             return 0.
         self.lib.OutputSystemSite(self.Adress, Name.encode('utf-8'))
+
     def GetNodePerSite(self):
         self.PrintPerSite('ToReturn.txt')
         Data = np.loadtxt('ToReturn.txt',dtype=float)
         os.system('rm -f ToReturn.txt')
         return Data
+
     def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True,FillColor='stress',FIGAX=None,ec=(0,0,0,1)):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
@@ -258,6 +300,7 @@ class System:
 
         # plt.show()
         return fig, ax
+
     def ActualizeNp(self):
         # transform the array of 0 and  1 into a dictionnary, which key is
         # the 0s or 1s and the respective value is the number of particles
@@ -267,10 +310,12 @@ class System:
             self.Np = dict(zip(unique, counts))[1]
         except:
             self.Np = 0
+
     def Extension(self,ax):
         if any([s==0 for S in self.state for s in S]):
             print('the system isn t full of particle, we can t apply any deformation')
             raise ValueError
-        return libRand.Extension(self.Adress,ax)
+        return self.lib.Extension(self.Adress,ax)
+
     def AffineDeformation(self, deformation_x = 0, deformation_y = 0):
-        return libRand.AffineDeformation(self.Adress,deformation_x,deformation_y)
+        return self.lib.AffineDeformation(self.Adress,deformation_x,deformation_y)

@@ -13,51 +13,63 @@ from scipy.optimize import brentq
 ########################################################
 ########################################################
 ########################################################
-def RandomParticle(seed=None,length=None,resolution=0.01,distribution='uniform'):
+def RandomParticle(seed=None,length=None,resolution=0.01,distribution='gaussian',n_t=2):
     if seed:
         np.random.seed(seed)
-    Mc1,rho0,eps1,eps2 = RandomMatrix(np.random.randint(0,10000000),distribution)
+    Mc,rho0,eps1,eps2 = RandomMatrix(np.random.randint(0,10000000),distribution,n_t)
     #Mc2 = RandomMatrix(np.random.randint(0,10000000))[0]
-    Mc2 = np.zeros((9,9),dtype=float)
-    Mc2[3,4],Mc2[3,5],Mc2[4,5]=1.,1.,1.
-    Mc2[6,7],Mc2[6,8],Mc2[7,8] = 1.,1.,1.
-    Mc2+=Mc2.T
-    Mc2[3,3],Mc2[4,4],Mc2[5,5]=-1.,-1.,-1.
-    Mc2[6,6],Mc2[7,7],Mc2[8,8]=-1.,-1.,-1.
-    Pmin,Pmax = GetInterval(Mc1,Mc2,resolution)
-    valmin = np.linalg.eigh(Mc1+Pmin*Mc2)[0][0]
-    valmax = np.linalg.eigh(Mc1+Pmax*Mc2)[0][0]
-    def getlength(P):
-        Mc = Mc1+P*Mc2
-        val,vect = np.linalg.eigh(Mc)
-        L4MU = MP.GetL4MU(Mc,rho0)
-        Lambda = MP.GetLambda(Mc,rho0)
-        L2MU = 0.5*(L4MU+Lambda)
-        kappa = L2MU/(2*length**2)
-        return val[0]-kappa
-    P = brentq(getlength,a=Pmin,b=Pmax,xtol=resolution)
-    return Mc1+P*Mc2, rho0,eps1,eps2
+    #Mc2 = np.zeros((9,9),dtype=float)
+    #Mc2[3,4],Mc2[3,5],Mc2[4,5]=1.,1.,1.
+    #Mc2[6,7],Mc2[6,8],Mc2[7,8] = 1.,1.,1.
+    #Mc2+=Mc2.T
+    #Mc2[3,3],Mc2[4,4],Mc2[5,5]=-1.,-1.,-1.
+    #Mc2[6,6],Mc2[7,7],Mc2[8,8]=-1.,-1.,-1.
+    #for i in range(9):
+    #    Mc2[i,i]+=-1
+
+    # Pmin,Pmax = GetInterval(Mc1,Mc2,resolution)
+    # if Pmin == Pmax :
+        # return Mc1, rho0,eps1,eps2
+    # valmin = np.linalg.eigh(Mc1+Pmin*Mc2)[0][0]
+    # valmax = np.linalg.eigh(Mc1+Pmax*Mc2)[0][0]
+    # def getlength(P):
+        #Mc = Mc1+P*Mc2
+        # Mc[np.diagional_indices(9)]
+        # val,vect = np.linalg.eigh(Mc)
+        # L4MU = MP.GetL4MU(Mc,rho0)
+        # Lambda = MP.GetLambda(Mc,rho0)
+        # L2MU = 0.5*(L4MU+Lambda)
+        # kappa = L2MU/(2*length**2)
+        # return val[0]-kappa
+    # if length:
+        # P = brentq(getlength,a=Pmin,b=Pmax,xtol=resolution)
+    # else:
+
+    return Mc, rho0,eps1,eps2
 def GetInterval(Mc1,Mc2,resolution):
     Nmax = int(5//resolution)
-    for P in np.linspace(0.,5.,Nmax):
+    for P in np.linspace(-5.,5.,Nmax):
         val,vect = np.linalg.eigh(Mc1+P*Mc2)
         if val[0]<0.:
             Pmax = P-resolution # return the step before
             break
     return 0.,Pmax
-def RandomMatrix(seed=None,distribution='uniform'):
-    n_t=2
+def RandomMatrix(seed=None,distribution='gaussian',n_t = 2):
+    #n_t=2
     ##########################
     if seed:
         np.random.seed(seed)
     ## Random matrix
-    if distribution=='uniform':
-        m_ij = np.random.rand(9,9)
+    if distribution=='uniform'or distribution == 'Uniform':
+        m_ij = 2*np.random.rand(9,9)-np.full((9,9),1)
     elif distribution=='exponential' or distribution=='exp':
         m_ij = np.random.exponential(3.,(9,9))
+    if distribution == 'gaussian' or distribution == 'Gaussian':
+        m_ij = np.random.normal(size=(9,9))
     ##########################
-    for ind_i in range(9):
-        m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t
+    #for ind_i in range(9):
+    #    m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t
+    m_ij =np.dot(m_ij,m_ij.T)
     rho0_vec,eps1,eps2 = RandomPositions(seed)
     ##########################
     ## symmetrize

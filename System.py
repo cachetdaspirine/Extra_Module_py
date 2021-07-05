@@ -360,6 +360,7 @@ class System:
             print("can t output an empty system")
             return 0.
         self.lib.OutputSystemSite(self.Adress, Name.encode('utf-8'))
+
     def PrintSpringPerSite(self,Name='NoName.txt'):
         # output the spring per site(easier if you wanna plot the springs).
         if self.Np < 1:
@@ -367,12 +368,14 @@ class System:
             return 0.
         if self.ParticleType=='Hexagon':
             self.lib.OutputSpringPerSite(self.Adress, Name.encode('utf-8'))
+
     def PrintPerSpring(self, Name='NoName.txt'):
         # output the system per spring (easier if you wanna plot the springs).
         if self.Np < 1:
             print("can t output an empty system")
             return 0.
         self.lib.OutputSystemSpring(self.Adress, Name.encode('utf-8'))
+
     def PlotPerSite(self, figuresize=(7, 5), Zoom=1.,Fill=True,Edge= True):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
@@ -425,6 +428,7 @@ class System:
                 ax.add_line(mlines.Line2D(X,Y,color=(231./255.,81./255.,19./255.),linewidth=3.))
         # plt.show()
         return fig, ax
+
     def PlotSiteStress(self,figuresize=(7,5),Zoom = 1.,Cmax=None):
         fig, ax = plt.subplots(figsize=figuresize)
         self.PrintSpringPerSite('ToPlot.txt')
@@ -470,6 +474,7 @@ class System:
                      Yc + 1 / Zoom * np.sqrt(Data.shape[0])])
         ax.set_aspect(aspect=1.)
         return fig,ax
+
     def PlotPerSpring(self, figuresize=(7, 5), Zoom=1., Colorbar=None):
         # this one has a trick, it only 'works' on UNIX system and
         # it requires to be autorized to edit and delete file. The
@@ -531,10 +536,12 @@ class System:
             self.Np = dict(zip(unique, counts))[1]
         except:
             self.Np = 0
+
     def Extension(self,ax):
         if any([s==0 for S in self.state for s in S]):
             print('the system isn t full of particle, we can t apply any deformation')
             raise ValueError
         return self.lib.Extension(self.Adress,ax)
+
     def AffineDeformation(self, deformation_x = 0, deformation_y = 0):
         return self.lib.AffineDeformation(self.Adress,deformation_x,deformation_y)
