@@ -6,6 +6,7 @@
 import math
 from scipy.optimize import minimize
 import numpy as np
+from numpy.random import default_rng
 import MeasurePoisson as MP
 from scipy.optimize import brentq
 ########################################################
