@@ -10,7 +10,9 @@ import numpy as np
 import pathlib
 from ctypes import cdll
 from ctypes import c_double
+from ctypes  import c_long
 from ctypes import c_int
+from ctypes import c_bool
 from ctypes import POINTER
 from ctypes import c_void_p
 from ctypes import c_char_p
@@ -31,6 +33,7 @@ lib1.GetSystemEnergy.restype = c_double
 lib1.GetSystemEnergy.argtypes = [POINTER(c_void_p)]
 
 lib1.OutputSystemSite.argtypes = [POINTER(c_void_p), c_char_p]
+lib1.OutputSystemSiteExtended.argtypes = [POINTER(c_void_p), c_char_p]
 
 lib1.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
 lib1.GetBulkEnergy.restype = c_double
@@ -47,6 +50,8 @@ lib1.GetNDOF.restypes = c_int
 
 lib1.GetHessian.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
 lib1.GetGradient.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
+
+lib1.GetDOFIndex.argtypes = [POINTER(c_void_p),POINTER(c_double)]#,POINTER(c_long),POINTER(c_long),POINTER(c_long),POINTER(c_long)]
 
 lib2 = cdll.LoadLibrary(
     str(pathlib.Path(__file__).parent.absolute()) + '/libRand2.so')
@@ -171,19 +176,34 @@ class System:
         self.lib.DeleteSystem(self.Adress)
 
     def get_Hessian(self):
-        NDOF = 2*self.lib.GetNDOF(self.Adress)
+        NDOF = self.lib.GetNDOF(self.Adress)
         Hessian = np.zeros(NDOF*NDOF,dtype=np.double)
         #Arraycpp =
         self.lib.GetHessian(self.Adress, Hessian.ctypes.data_as(POINTER(c_double)) , NDOF)
         return np.reshape(Hessian,(-1,NDOF))
+    def PlotHessVect(self,Vect):
+        Hess = self.get_Hessian()
+        Mapping = self.get_IndexList()
+        self.PrintPerSite('ToPlot.txt')
+        Data = np.loadtxt('ToPlot.txt', dtype=float)
+        os.system('rm -rf ToPlot.txt')
 
+        plt.quiver()
     def get_IndexList(self):
         NDOF = self.lib.GetNDOF(self.Adress)
-        Is = np.zeros(NDOF,dtype=int)
-        Js = np.zeros(NDOF,dtype=int)
-        Ks = np.zeros(NDOF,dtype = int)
-        Xs = np.zeros(NDOF,dtype=bool)
-
+        #Is = np.zeros(NDOF,dtype=np.int)
+        #Js = np.zeros(NDOF,dtype=np.int)
+        #Ks = np.zeros(NDOF,dtype=np.int)
+        #Xs = np.zeros(NDOF,dtype=np.int)
+        XYs = np.zeros(NDOF,dtype=np.double)
+        self.lib.GetDOFIndex(self.Adress,XYs.ctypes.data_as(POINTER(c_double)))
+                            #Is.ctypes.data_as(POINTER(c_long)),
+                            #Js.ctypes.data_as(POINTER(c_long)),
+                            #Ks.ctypes.data_as(POINTER(c_long)),
+                            #Xs.ctypes.data_as(POINTER(c_long)))
+        #Maps = np.loadtxt('Mapping.txt',dtype=int)
+        #os.system('rm Mapping.txt')
+        return XYs
 
     def get_Gradient(self):
         NDOF = self.lib.GetNDOF(self.Adress)
@@ -235,12 +255,15 @@ class System:
                 self.Adress, Arraycpp, self.Lx, self.Ly)
             self.Energy = self.lib.GetSystemEnergy(self.Adress)
 
-    def PrintPerSite(self, Name='NoName.txt'):
+    def PrintPerSite(self, Name='NoName.txt',Extended = False):
         # output the sytem per site (easier if you wanna plot the sites).
         if self.Np < 1:
             print("can t output an empty system")
             return 0.
-        self.lib.OutputSystemSite(self.Adress, Name.encode('utf-8'))
+        if Extended :
+            self.lib.OutputSystemSiteExtended(self.Adress, Name.encode('utf-8'))
+        else:
+            self.lib.OutputSystemSite(self.Adress, Name.encode('utf-8'))
 
     def GetNodePerSite(self):
         self.PrintPerSite('ToReturn.txt')

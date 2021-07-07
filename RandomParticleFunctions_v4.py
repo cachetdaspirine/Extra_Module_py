@@ -13,14 +13,20 @@ from scipy.optimize import brentq
 ########################################################
 ########################################################
 ########################################################
-def RandomParticle(seed=None,length=None,resolution=0.01,distribution='gaussian',n_t=2):
-    if seed:
-        np.random.seed(seed)
-    Mc,rho0,eps1,eps2 = RandomMatrix(np.random.randint(0,10000000),distribution,n_t)
+def RandomParticle(seed=None,distribution='gaussian'):
+    if not seed:
+        #np.random.seed(seed)
+        seed = np.random.randint(0,10000000000)
+        rng = np.random.default_rng(seed)
+    else :
+        rng = np.random.default_rng(seed)
+    #else :
+    #    seed = np.random.randint(0,10000000000)
+    Mc,rho0,eps1,eps2 = RandomMatrix(rng = rng,distribution=distribution,n_t=0)
     #Mc2 = RandomMatrix(np.random.randint(0,10000000))[0]
     #Mc2 = np.zeros((9,9),dtype=float)
     #Mc2[3,4],Mc2[3,5],Mc2[4,5]=1.,1.,1.
-    #Mc2[6,7],Mc2[6,8],Mc2[7,8] = 1.,1.,1.
+    #Mc2[6,7],Mc2[6,8],Mc2[7,8] = 1.,1.,1.OO
     #Mc2+=Mc2.T
     #Mc2[3,3],Mc2[4,4],Mc2[5,5]=-1.,-1.,-1.
     #Mc2[6,6],Mc2[7,7],Mc2[8,8]=-1.,-1.,-1.
@@ -45,7 +51,7 @@ def RandomParticle(seed=None,length=None,resolution=0.01,distribution='gaussian'
         # P = brentq(getlength,a=Pmin,b=Pmax,xtol=resolution)
     # else:
 
-    return Mc, rho0,eps1,eps2
+    return Mc, rho0,eps1,eps2,seed
 def GetInterval(Mc1,Mc2,resolution):
     Nmax = int(5//resolution)
     for P in np.linspace(-5.,5.,Nmax):
@@ -54,30 +60,31 @@ def GetInterval(Mc1,Mc2,resolution):
             Pmax = P-resolution # return the step before
             break
     return 0.,Pmax
-def RandomMatrix(seed=None,distribution='gaussian',n_t = 2):
+def RandomMatrix(rng=None,distribution='gaussian',n_t = 2):
     #n_t=2
     ##########################
-    if seed:
-        np.random.seed(seed)
+    if not rng:
+        #np.random.seed(seed)
+        rng = np.random.default_rng()
     ## Random matrix
     if distribution=='uniform'or distribution == 'Uniform':
-        m_ij = 2*np.random.rand(9,9)-np.full((9,9),1)
+        m_ij = 2*rng.rand(9,9)-np.full((9,9),1)
     elif distribution=='exponential' or distribution=='exp':
-        m_ij = np.random.exponential(3.,(9,9))
+        m_ij = rng.exponential(3.,(9,9))
     if distribution == 'gaussian' or distribution == 'Gaussian':
-        m_ij = np.random.normal(size=(9,9))
+        m_ij = rng.normal(size=(9,9))
     ##########################
     #for ind_i in range(9):
     #    m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t
     m_ij =np.dot(m_ij,m_ij.T)
-    rho0_vec,eps1,eps2 = RandomPositions(seed)
+    rho0_vec,eps1,eps2 = RandomPositions(rng)
     ##########################
     ## symmetrize
     ##########################
     ## Three-fold
     m_ij = RotateThreeFold(m_ij)
     ## i <--> j symmetry
-    m_ij = MakeSymmetricMatrix(m_ij)
+    #m_ij = MakeSymmetricMatrix(m_ij)
     ##########################
     ##########################
     return (m_ij, rho0_vec,eps1,eps2)
@@ -85,10 +92,11 @@ def RandomMatrix(seed=None,distribution='gaussian',n_t = 2):
 ########################################################
 ########################################################
 ########################################################
-def RandomPositions(seed=None):
+def RandomPositions(rng=None):
     ##########################
-    if seed:
-        np.random.seed(seed)
+    if not rng:
+        #np.random.seed(seed)
+        rng = np.random.default_rng()
     ## Two random epsilon
     epsilon_1 = 0.01#np.random.rand(1)/10.0
     epsilon_2 = 0.#np.random.rand(1)/10.0
