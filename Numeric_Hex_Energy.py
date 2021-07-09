@@ -13,6 +13,7 @@ class BD:
         self.Nmax = Nmax
         self.Range = P.HRange(Nmax)
         self.NList = np.array([Sh.Np(Sh.Parallel(r,P.ParticleType)) for r in self.Range])
+        self.Nmax=self.NList[-1]
         #self.Systems = np.empty(self.Range.shape[0],dtype=object)
         self.SystemEnergy = np.zeros(self.Range.shape[0],dtype=float)
         #self.Systems = np.array([

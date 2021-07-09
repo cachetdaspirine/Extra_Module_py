@@ -180,6 +180,9 @@ class MatrixToContinuum:
         self.l0 = 1.
         self.fb = self.FB/np.sqrt(3)*2/(1+self.eps1)**2
         self.J = self.fb*self.Gamma#self.l*self.fb*(1+self.nu)*self.Gamma/2*self.l0
+    def reComputeJ(self,Gamma):
+        self.Gamma = Gamma
+        self.J = self.fb*self.Gamma
     def HRange(self,Nmax):
         if self.ParticleType == 'Triangle':
             Size = int(4*(Nmax/6)**0.5+0.5)
