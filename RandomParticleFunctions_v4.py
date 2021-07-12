@@ -127,8 +127,10 @@ def RandomPositions(rng=None):
     #mapping = np.zeros([2,9], dtype=int)
     #mapping = np.array([[0, 2, 4, 6, 8, 10, 0, 2, 4],\
     #                 [2, 4, 6, 8, 10, 0, 6, 8, 10]])
-    mapping = np.array([[0,4,8,0,4,8,2,6,10,]
-                        ,[2,6,10,4,8,0,6,10,2]])
+    #mapping = np.array([[0,4,8,0,4,8,2,6,10,]
+    #                    ,[2,6,10,4,8,0,6,10,2]])
+    mapping = np.array([[0, 2, 4, 6, 8,10, 0, 4, 8],
+                        [4, 6, 8,10, 0, 2, 2, 6,10]])
     ##
     rho0_vec = np.zeros(9)
     for ind_i in range(9):
@@ -169,6 +171,8 @@ def RotateThreeFold(m_ij):
     P_ij_inv[7, 8] = 1.0
     P_ij_inv[8, 6] = 1.0
     ###########
+
+
     m_ij_s1 = RotateMij(P_ij, P_ij_inv, m_ij)
     m_ij_s2 = RotateMij(P_ij, P_ij_inv, m_ij_s1)
     ###########
