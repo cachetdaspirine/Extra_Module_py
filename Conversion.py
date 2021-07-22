@@ -171,7 +171,7 @@ class MatrixToContinuum:
         self.Mc,self.q0,self.eps1,self.eps2,self.Gamma = Mc,q0,eps1,eps2,Gamma
         S = RSys.System(Mc,q0,np.array([[1]]))
         self.ParticleType='Hexagon'
-        self.FB = S.GetBulkEnergy()
+        self.FB = Poisson.GetEBulk(self.Mc,self.q0)#S.GetBulkEnergy()
         self.L4MU = Poisson.GetL4MU(Mc,q0)
         self.nu = Poisson.ComputePoissonRatio(Mc,q0)
         self.EigenValues = RMatrix.FindEigenValues(Mc)

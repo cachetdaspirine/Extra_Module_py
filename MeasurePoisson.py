@@ -16,6 +16,7 @@ uxxmax = 0.05
 NPoints = 100
 SystemSize = 1
 def GetEBulk(Mc,q0,check=False):
+    #apply isotropic deformation
     State=np.full((SystemSize,SystemSize),1)
     Sys = RS.System(Mc, q0, State)
     du = (uxxmax-uxxmin)/NPoints
@@ -32,7 +33,7 @@ def GetEBulk(Mc,q0,check=False):
         plt.plot(E[:,0],E[:,1],c='none')
         plt.scatter(E[:,0],E[:,1])
     #return uxx and the energy
-    return E[np.argmin(E[:,1])]
+    return E[np.argmin(E[:,1])]/Sh.Np(State)
 def FindBestRegularHexagon(Mc,q0):
     qR =np.array([1/(2*3**0.5),(1)/2.,-(1)/(2*3**0.5),(1)/2.,-(1)/3**0.5,0,-(1)/(2*3**0.5),-(1)/2.,(1)/(2*3**0.5),-(1)/2,(1)/(3**0.5),0.])
     def E(Gamma):
@@ -40,6 +41,7 @@ def FindBestRegularHexagon(Mc,q0):
     res = minimize(E,0)
     return E(res.x),res.x
 def GetEBulk2(Mc,q0,check=False):
+    #apply shear deformation
     State=np.full((SystemSize,SystemSize),1)
     Sys = RS.System(Mc, q0, State)
     du = (uxxmax-uxxmin)/NPoints
@@ -56,17 +58,17 @@ def GetEBulk2(Mc,q0,check=False):
         plt.scatter(E[:,0],E[:,1])
     return E[np.argmin(E[:,1])]
 def GetRealBulk(Mc,q0,*arg,**kwargs):
-    Size = [10,15,20]
+    Size = [10,15,20,30,40]
     E = list()
     for s in Size:
         NP = Sh.Np(Sh.Parallel(s,ParticleType='Hexagon'))
         E.append([NP,RS.System(Mc,q0,Sh.Parallel(s,ParticleType='Hexagon')).Energy/NP])
     E = np.array(E)
-    p, conv = curve_fit(line, 1/E[:, 0], E[:, 1], p0=[0, 0])
-    if 'Check' in kwargs:
-        if kwargs.get('Check'):
-            plt.plot(1/E[:,0],line(1/E[:,0],p[0],p[1]))
-            plt.scatter(1/E[:,0],E[:,1])
+    p, conv = curve_fit(line, 1/np.sqrt(E[:, 0]), E[:, 1], p0=[0, 0])
+    if 'Check' in kwargs or 'check' in kwargs:
+        if kwargs.get('Check') or kwargs.get('check'):
+            plt.plot(1/E[:,0]**0.5,line(1/E[:,0]**0.5,p[0],p[1]))
+            plt.scatter(1/E[:,0]**0.5,E[:,1])
     return p[1]
 
 

@@ -37,8 +37,8 @@ def FDisk_Anlytic(rhoSurf,rhoElastic,Gamma,nu):
     : rhoElastic : radius unitlesss use for the elastic free energy
     : Return the energy in bulk free energy per volume unit
     """
-    return (Gamma*(1+nu)/rhoSurf+1-(1+nu)*((iv(0,rhoElastic)-iv(2,rhoElastic))/(iv(0,rhoElastic)\
-                                    +iv(2,rhoElastic)+nu*(iv(0,rhoElastic)-iv(2,rhoElastic)))))
+    return Gamma*(1+nu)/rhoSurf+1-(1+nu)*((iv(0,rhoElastic)-iv(2,rhoElastic))/(iv(0,rhoElastic)\
+                                    +iv(2,rhoElastic)+nu*(iv(0,rhoElastic)-iv(2,rhoElastic))))
 def FDisk_Analytic_Triangle(N,P,LowerBound = True):
     """
     return the free energy per triangle

@@ -106,6 +106,8 @@ def Star(Size,ParticleType = 'Triangle'):
                         Array[i,j] = 1
     return Array
 def Parallel(size,ParticleType='Triangle'):
+    if size==0:
+        return np.array([[0]])
     if ParticleType=='Triangle':
         if size <4 :
             return np.array([[0,0,0],[0,1,0],[0,0,0]])
