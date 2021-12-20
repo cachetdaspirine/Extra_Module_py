@@ -73,7 +73,7 @@ lib2.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
 lib2.GetBulkEnergy.restype = c_double
 
 
-lib2.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
+lib2.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double,POINTER(c_int),c_int]
 lib2.AffineDeformation.restype = c_double
 
 lib2.Extension.argtypes = [POINTER(c_void_p),c_int]
@@ -340,5 +340,13 @@ class System:
             raise ValueError
         return self.lib.Extension(self.Adress,ax)
 
-    def AffineDeformation(self, deformation_x = 0, deformation_y = 0):
-        return self.lib.AffineDeformation(self.Adress,deformation_x,deformation_y)
+    def AffineDeformation(self, deformation_x = 0, deformation_y = 0, NodesIndex = [0,1]):
+        if type(NodesIndex) != np.ndarray:
+            NodesIndex= np.array(NodesIndex)
+        Object=NodesIndex.ctypes.data_as(POINTER(c_int))
+        for i in range(NodesIndex.shape[0]):
+            Object[i] = NodesIndex[i]
+        # this is not compatible with the spring expansion model
+        return self.lib.AffineDeformation(self.Adress,deformation_x,deformation_y,
+                                          Object,
+                                          NodesIndex.shape[0])
