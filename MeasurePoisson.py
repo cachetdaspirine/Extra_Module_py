@@ -72,7 +72,7 @@ def GetRealBulk(Mc,q0,*arg,**kwargs):
     return p[1]
 
 
-def GetL4MU(Mc=0, q0=0,check=False,Parameter = None):
+def GetL4MU(Mc=0, q0=0,check=False,Parameter = None,Nodes=[0,1]):
     # Computation variables
     l4mu = list()
     du = (uxxmax-uxxmin)/NPoints
@@ -88,9 +88,9 @@ def GetL4MU(Mc=0, q0=0,check=False,Parameter = None):
     for n in range(NPoints+1):
         uxx=(uxxmax-uxxmin)/NPoints*n+uxxmin
         if n ==0:
-            E = Sys.AffineDeformation(uxxmin,uxxmin)
+            E = Sys.AffineDeformation(uxxmin,uxxmin,Nodes)
         else :
-            E = Sys.AffineDeformation(du, du)
+            E = Sys.AffineDeformation(du, du,Nodes)
         l4mu.append([uxx,(E-E0) / V])
     l4mu = np.array(l4mu)
     p, conv = curve_fit(Parabola, l4mu[:, 0], l4mu[:, 1], p0=[0, 0, 0])
@@ -101,7 +101,7 @@ def GetL4MU(Mc=0, q0=0,check=False,Parameter = None):
         plt.scatter(l4mu[:,0],l4mu[:,1])
         plt.plot(l4mu[:,0],Parabola(l4mu[:,0],p[0],p[1],p[2]))
     return p[0]
-def GetLambda(Mc=0,q0=0,check=False,Parameter = None):
+def GetLambda(Mc=0,q0=0,check=False,Parameter = None,Nodes=[0,1]):
     # Computation variables
     l = list()
     du = (uxxmax-uxxmin)/NPoints
@@ -117,9 +117,9 @@ def GetLambda(Mc=0,q0=0,check=False,Parameter = None):
     for n in range(NPoints+1):
         uxx=(uxxmax-uxxmin)/NPoints*n+uxxmin
         if n ==0:
-            E = Sys.AffineDeformation(uxxmin,-uxxmin)
+            E = Sys.AffineDeformation(uxxmin,-uxxmin,Nodes)
         else :
-            E = Sys.AffineDeformation(du, -du)
+            E = Sys.AffineDeformation(du, -du,Nodes)
         l.append([uxx,(E-E0) / V])
     l = np.array(l)
     p, conv = curve_fit(Parabola, l[:, 0], l[:, 1], p0=[0, 0, 0])
@@ -131,8 +131,8 @@ def GetLambda(Mc=0,q0=0,check=False,Parameter = None):
         plt.plot(l[:,0],Parabola(l[:,0],p[0],p[1],p[2]))
     return p[0]
 
-def ComputePoissonRatio(Mc=0,q0=0,check=False,Parameter=None):
-    L4MU = GetL4MU(Mc,q0,check,Parameter)
-    Lambda = GetLambda(Mc,q0,check,Parameter)
+def ComputePoissonRatio(Mc=0,q0=0,check=False,Parameter=None,Nodes = [0,1]):
+    L4MU = GetL4MU(Mc,q0,check,Parameter,Nodes)
+    Lambda = GetLambda(Mc,q0,check,Parameter,Nodes)
     L = 0.5*(L4MU-Lambda)
     return L/(L4MU-L)
