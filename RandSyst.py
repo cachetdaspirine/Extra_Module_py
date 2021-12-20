@@ -39,7 +39,9 @@ lib1.GetBulkEnergy.argtypes = [POINTER(c_void_p)]
 lib1.GetBulkEnergy.restype = c_double
 
 
-lib1.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
+#lib1.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double]
+#lib1.AffineDeformation.restype = c_double
+lib1.AffineDeformation.argtypes = [POINTER(c_void_p),c_double,c_double,POINTER(c_int),c_int]
 lib1.AffineDeformation.restype = c_double
 
 lib1.Extension.argtypes = [POINTER(c_void_p),c_int]
@@ -214,11 +216,13 @@ class System:
 
     def GetBulkEnergy(self):
         return self.lib.GetBulkEnergy(self.Adress)
-
     def Evolv(self, NewState):
         self.ActualizeNp()
         # ------------Convert the new state into a pointer array-------------
-        self.state = NewState
+        if NewState:
+            self.state = NewState
+        else :
+            NewState=self.state
         array = np.zeros(self.state.shape[0] * self.state.shape[1], dtype=int)
         for i in range(self.state.shape[0]):
             for j in range(self.state.shape[1]):
