@@ -93,13 +93,13 @@ def RandomMatrix(rng=None,distribution='gaussian',n_t = 2):
 ########################################################
 ########################################################
 ########################################################
-def RandomPositions(rng=None):
+def RandomPositions(rng=None,epsilon_1=0.01):
     ##########################
     if not rng:
         #np.random.seed(seed)
         rng = np.random.default_rng()
     ## Two random epsilon
-    epsilon_1 = 0.01#np.random.rand(1)/10.0
+    #epsilon_1 = 0.01#np.random.rand(1)/10.0
     epsilon_2 = 0.#np.random.rand(1)/10.0
     ## Regular Hexagon
     ell2 = 1.0 + epsilon_1

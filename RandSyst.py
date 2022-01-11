@@ -56,7 +56,7 @@ lib1.GetGradient.argtypes = [POINTER(c_void_p), POINTER(c_double), c_int]
 lib1.GetDOFIndex.argtypes = [POINTER(c_void_p),POINTER(c_double)]#,POINTER(c_long),POINTER(c_long),POINTER(c_long),POINTER(c_long)]
 
 lib2 = cdll.LoadLibrary(
-    str(pathlib.Path(__file__).parent.absolute()) + '/libRand2.so')
+    str(pathlib.Path(__file__).parent.absolute()) + '/libRand_expansion.so')
 
 lib2.CreateSystem.restype = POINTER(c_void_p)
 lib2.CreateSystem.argtypes = [POINTER(c_int), POINTER(c_double), POINTER(c_double), c_int, c_int]
