@@ -5,6 +5,7 @@ from scipy.optimize import curve_fit
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import Shape as Sh
+from MC import *
 
 def Parabola(x,a,b,c):
     return a*x**2+b*x+c
@@ -15,7 +16,9 @@ uxxmin = -0.05
 uxxmax = 0.05
 NPoints = 100
 SystemSize = 1
-def GetEBulk(Mc,q0,check=False):
+def GetEBulk(Mc=False,q0=False,check=False,Parameter=False):
+    if Parameter:
+        Mc,q0 = get_Mc(Parameter=Parameter)
     #apply isotropic deformation
     State=np.full((SystemSize,SystemSize),1)
     Sys = RS.System(Mc, q0, State)
@@ -40,23 +43,6 @@ def FindBestRegularHexagon(Mc,q0):
         return 0.5*np.dot((1+Gamma)*qR-q0,np.dot(Mc,(1+Gamma)*qR-q0))
     res = minimize(E,0)
     return E(res.x),res.x
-def GetEBulk2(Mc,q0,check=False):
-    #apply shear deformation
-    State=np.full((SystemSize,SystemSize),1)
-    Sys = RS.System(Mc, q0, State)
-    du = (uxxmax-uxxmin)/NPoints
-     #return Sys.GetBulkEnergy()
-    E = [[0,Sys.GetBulkEnergy()]]
-    for n in range(NPoints+1):
-        uxx=(uxxmax-uxxmin)/NPoints*n+uxxmin
-        if n ==0:
-            E.append( [uxx,Sys.AffineDeformation(uxxmin,-uxxmin)] )
-        else :
-            E.append( [uxx,Sys.AffineDeformation(du, -du)] )
-    E = np.array(E)
-    if check:
-        plt.scatter(E[:,0],E[:,1])
-    return E[np.argmin(E[:,1])]
 def GetRealBulk(Mc,q0,*arg,**kwargs):
     Size = [10,15,20,30,40]
     E = list()

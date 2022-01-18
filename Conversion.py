@@ -82,19 +82,25 @@ class SimulToAnalytic:
             #return max(int(0.5* (1+np.sqrt(1+8*N))),1)
             return max(int(1./6.* (3+np.sqrt(3*(4*N-1)))),1)
 class AnalyticToSimul:
-    def __init__(self,nu=1/3,Gamma=0.,l=1.,epsilon=0.1,writting = True,ParticleType='Triangle'): #here we assumed k = 1
-        self.nu,self.Gamma,self.l,self.epsilon,self.ParticleType = nu,Gamma,l,epsilon,ParticleType
+    def __init__(self,nu=1/3,Gamma=0.,l=1.,epsilon=0.1,writting = True,ParticleType='Triangle',nu2=False ): #here we assumed k = 1
+        self.nu,self.nu2,self.Gamma,self.l,self.epsilon,self.ParticleType = nu,nu2,Gamma,l,epsilon,ParticleType
         self.k = 1
         self.kA = (3*np.sqrt(3)*self.nu-np.sqrt(3))/(2*(1-self.nu))
+        if self.nu2:
+            self.kA2 = (3*np.sqrt(3)*self.nu2-np.sqrt(3))/(2*(1-self.nu2))
+        else:
+            self.kA2 = (3*np.sqrt(3)*self.nu-np.sqrt(3))/(2*(1-self.nu))
         if ParticleType=='Triangle':
             self.l0 = 1+self.epsilon
-            self.LMu = 3*np.sqrt(3)/2+self.kA
+            self.LMu = 3*np.sqrt(3)/2+0.5*(self.kA+self.kA2)
             self.kc = self.LMu/(8*np.sqrt(3)*(self.l/self.l0)**2)
         elif ParticleType=='Hexagon':
-            self.LMu = 3*np.sqrt(3)/4+0.5*self.kA
+            self.LMu = 3*np.sqrt(3)/4+0.25*(self.kA+self.kA2)
             self.kc = (1-epsilon**2)*self.LMu/(2*np.sqrt(3)*self.l**2)
             self.l0 = 1.#+self.epsilon
         self.fb = 0.5*self.LMu*(1+self.nu)*(2*self.epsilon/(1+self.epsilon))**2
+        #print('fb these = '+str(1/(np.sqrt(3)/2*(1+self.epsilon)**2)*(3*self.k+np.sqrt(3)/2*(self.kA+self.kA2))*self.epsilon**2))
+        #print('FB these = '+str((3*self.k+np.sqrt(3)/2*(self.kA+self.kA2))*self.epsilon**2))
         if ParticleType=='Triangle':
             self.FB = self.fb*np.sqrt(3)/4 * self.l0**2#Bulk free energy per particle
             self.J = self.l*self.fb*(1+self.nu)*self.Gamma/2*self.l0

@@ -32,7 +32,7 @@ class BF:
             elif P.ParticleType == 'Hexagon':
                 self.width_list,self.energy_list1, self.energy_list2, BulkE = \
                         H.DetermineInfiniFilamentEnergy(P.k, P.k, P.kc, \
-                                                        P.kA, P.kA, \
+                                                        P.kA, P.kA2, \
                                                         1., \
                                                         P.epsilon, 0., WidthMax)
         self.Systems = np.array([np.empty(3,dtype=object) for w in range(0,WidthMax,1)])

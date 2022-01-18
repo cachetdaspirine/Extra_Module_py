@@ -8,9 +8,11 @@ VolumiqueRelationM=np.load(str(pathlib.Path(__file__).parent.absolute())+'/Volum
 #print(VolumiqueRelationP)
 #print(VolumiqueRelationM)
 
-def get_Mc(k=0,kc=0,eps=0,kA=0,Parameter = False):
+def get_Mc(k=0,kc=0,eps=0,kA=0,kA2=False,Parameter = False):
     if Parameter:
-        k,kc,eps,kA = Parameter.k, Parameter.kc,Parameter.epsilon,Parameter.kA
+        k,kc,eps,kA,kA2 = Parameter.k, Parameter.kc,Parameter.epsilon,Parameter.kA,Parameter.kA2
+    if not kA2:
+        kA2 = kA
     Mc = np.array([np.zeros(12,dtype=float) for _ in range(12)])
     Ap = (1+eps)**2*3**0.5/4.
     Am = (1-eps)**2*3**0.5/4.
@@ -21,7 +23,7 @@ def get_Mc(k=0,kc=0,eps=0,kA=0,Parameter = False):
     for R in VolumiqueRelationP:
         Mc[R[0]]+=R[1]*kA/(2*Ap)
     for R in VolumiqueRelationM:
-        Mc[R[0]]+=R[1]*kA/(2*Am)
+        Mc[R[0]]+=R[1]*kA2/(2*Am)
     # Mc[0,0]+=3./4.
     # Mc[0,1]+=3**0.5/2.
     # Mc[1,1]+=1./4.
