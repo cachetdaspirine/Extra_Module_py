@@ -4,6 +4,7 @@ from RandomParticleFunctions_v4 import *
 from scipy.optimize import curve_fit
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+import copy
 import Shape as Sh
 from MC import *
 
@@ -117,8 +118,73 @@ def GetLambda(Mc=0,q0=0,check=False,Parameter = None,Nodes=[0,1]):
         plt.plot(l[:,0],Parabola(l[:,0],p[0],p[1],p[2]))
     return p[0]
 
-def ComputePoissonRatio(Mc=0,q0=0,check=False,Parameter=None,Nodes = [0,1]):
+def ComputePoissonRatio(Mc=0,q0=0,check=False,Parameter=None,Nodes=[0,1]):
     L4MU = GetL4MU(Mc,q0,check,Parameter,Nodes)
     Lambda = GetLambda(Mc,q0,check,Parameter,Nodes)
     L = 0.5*(L4MU-Lambda)
     return L/(L4MU-L)
+def compute_decoupled_nu(Mc,rho0,triangle='both'):
+    # This function measure the Poisson ratio of one of the two triangles
+    # in the hexagonal particle. Taking a coupling matrix Mc, and a rest
+    # configuration rho0 (rho0 corresponds to the 9 length) we construct
+    # the according node position vector for a regular hexagon depending
+    # on which triangle we wanna compute the Poisson ratio of. We Then
+    # apply volumic, then pure shear deformation to measure nu. The def-
+    # -formation is applied to the nodes position, and we compute the
+    # length to get the energy accordingly.
+    qregular = np.array([(1)/(2*3**0.5),
+                   (1)/2.,
+                   -(1)/(2*3**0.5),
+                   (1)/2.,
+                   -(1)/3**0.5,
+                   0.,
+                   -(1)/(2*3**0.5),
+                   -(1)/2.,
+                   (1)/(2*3**0.5),
+                   -(1)/2,
+                   (1)/(3**0.5),
+                   0.])
+    if triangle == 'small':
+        Mreduced = Mc[3:6,3:6]
+        rho0reduced = rho0[3:6]
+        qregular_reduced = qregular[[2,3,6,7,10,11]]
+    elif triangle=='big':
+        Mreduced = Mc[0:3,0:3]
+        rho0reduced = rho0[0:3]
+        qregular_reduced = qregular[[0,1,4,5,8,9]]
+    elif triangle=='both':
+        Mreduced = Mc[0:6,0:6]
+        rho0reduced = rho0[0:6]
+        qregular_reduced = qregular[[0,1,4,5,8,9,2,3,6,7,10,11]]
+    #Measure dcoupled l2mu by applying a volumic deformation
+    L2MU = deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,1,1)
+    Lambda = deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,1,-1)
+    L = 0.5*(L2MU-Lambda)
+    return L/(L2MU-L)
+def deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,SignOfuxx,SignOfuyy):
+    def E(Mc,rho,rho0):
+        return np.dot((rho-rho0),np.dot(Mc,rho-rho0))
+    energy_list = np.zeros((NPoints,2))
+    for n,uxx in enumerate(np.linspace(uxxmin,uxxmax,NPoints)):
+        # apply the deformation to the Nodes
+        q_deformed = copy.copy(qregular_reduced)
+        q_deformed[0::2] = qregular_reduced[0::2] * (1+uxx*SignOfuxx)
+        q_deformed[1::2] = qregular_reduced[1::2] * (1+uxx*SignOfuyy)
+        #compute the associated Length
+        if q_deformed.shape[0]//2 == 3:
+            Nnodes = q_deformed.shape[0]//2
+            rho_deformed = np.array([np.sqrt((q_deformed[2*(i%Nnodes)]-q_deformed[2*((i+1)%Nnodes)])**2+
+                                            (q_deformed[2*(i%Nnodes)+1]-q_deformed[2*((i+1)%Nnodes)+1])**2)
+                                            for i in range(Nnodes)])
+        else:
+            rho_deformed = np.zeros(6,dtype=float)
+            Nnodes = q_deformed.shape[0]//4
+            rho_deformed[:3] = np.array([np.sqrt((q_deformed[2*(i%Nnodes)]-q_deformed[2*((i+1)%Nnodes)])**2+
+                                            (q_deformed[2*(i%Nnodes)+1]-q_deformed[2*((i+1)%Nnodes)+1])**2)
+                                            for i in range(Nnodes)])
+            rho_deformed[3:] = np.array([np.sqrt((q_deformed[2*(i%Nnodes+Nnodes)]-q_deformed[2*((i+1)%Nnodes+Nnodes)])**2+
+                                            (q_deformed[2*(i%Nnodes+Nnodes)+1]-q_deformed[2*((i+1)%Nnodes+Nnodes)+1])**2)
+                                            for i in range(Nnodes)])
+        energy_list[n] = [uxx,E(Mreduced,rho_deformed,rho0reduced)]
+    P, conv = curve_fit(Parabola, energy_list[:, 0], energy_list[:, 1], p0=[0, 0, 0])
+    return P[0]

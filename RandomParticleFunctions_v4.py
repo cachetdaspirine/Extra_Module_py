@@ -14,7 +14,7 @@ from scipy.optimize import brentq
 ########################################################
 ########################################################
 ########################################################
-def RandomParticle(seed=None,distribution='gaussian'):
+def RandomParticle(seed=None,distribution='gaussian',eps1=0.01,eps2=0.):
     if not seed:
         #np.random.seed(seed)
         seed = np.random.randint(0,10000000000)
@@ -23,7 +23,7 @@ def RandomParticle(seed=None,distribution='gaussian'):
         rng = np.random.default_rng(seed)
     #else :
     #    seed = np.random.randint(0,10000000000)
-    Mc,rho0,eps1,eps2 = RandomMatrix(rng = rng,distribution=distribution,n_t=0)
+    Mc,rho0,eps1,eps2 = RandomMatrix(rng = rng,distribution=distribution,n_t=0,eps1=eps1,eps2=eps2)
     #Mc2 = RandomMatrix(np.random.randint(0,10000000))[0]
     #Mc2 = np.zeros((9,9),dtype=float)
     #Mc2[3,4],Mc2[3,5],Mc2[4,5]=1.,1.,1.
@@ -61,7 +61,7 @@ def GetInterval(Mc1,Mc2,resolution):
             Pmax = P-resolution # return the step before
             break
     return 0.,Pmax
-def RandomMatrix(rng=None,distribution='gaussian',n_t = 2):
+def RandomMatrix(rng=None,distribution='gaussian',n_t = 2,eps1=0.01,eps2=0.):
     #n_t=2
     ##########################
     if not rng:
@@ -78,7 +78,7 @@ def RandomMatrix(rng=None,distribution='gaussian',n_t = 2):
     #for ind_i in range(9):
     #    m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t
     m_ij =np.dot(m_ij,m_ij.T)
-    rho0_vec,eps1,eps2 = RandomPositions(rng)
+    rho0_vec,eps1,eps2 = RandomPositions(rng,eps1,eps2)
     ##########################
     ## symmetrize
     ##########################
@@ -93,14 +93,14 @@ def RandomMatrix(rng=None,distribution='gaussian',n_t = 2):
 ########################################################
 ########################################################
 ########################################################
-def RandomPositions(rng=None,epsilon_1=0.01):
+def RandomPositions(rng=None,epsilon_1=0.01,epsilon_2=0.):
     ##########################
     if not rng:
         #np.random.seed(seed)
         rng = np.random.default_rng()
     ## Two random epsilon
     #epsilon_1 = 0.01#np.random.rand(1)/10.0
-    epsilon_2 = 0.#np.random.rand(1)/10.0
+    #epsilon_2 = 0.#np.random.rand(1)/10.0
     ## Regular Hexagon
     ell2 = 1.0 + epsilon_1
     q0_vec = np.zeros(12)
