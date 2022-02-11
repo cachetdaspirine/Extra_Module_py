@@ -69,7 +69,7 @@ def GetL4MU(Mc=0, q0=0,check=False,Parameter = None,Nodes=[0,1]):
         Sys = S.System(State,Parameter=Parameter)
     else:
         Sys = RS.System(Mc, q0, State)
-    V = Sys.Extension(0)*Sys.Extension(1)
+    #V = Sys.Extension(0)*Sys.Extension(1)
     Sys.GetBulkEnergy()
     E0 = Sys.Energy
     for n in range(NPoints+1):
@@ -78,15 +78,14 @@ def GetL4MU(Mc=0, q0=0,check=False,Parameter = None,Nodes=[0,1]):
             E = Sys.AffineDeformation(uxxmin,uxxmin,Nodes)
         else :
             E = Sys.AffineDeformation(du, du,Nodes)
-        l4mu.append([uxx,(E-E0) / V])
+        l4mu.append([uxx,E])#(E-E0)/V
     l4mu = np.array(l4mu)
     p, conv = curve_fit(Parabola, l4mu[:, 0], l4mu[:, 1], p0=[0, 0, 0])
     if check:
-        fig = plt.figure(figsize=(8,6))
         print(p)
         plt.plot(l4mu[:,0],l4mu[:,1],c='none')
         plt.scatter(l4mu[:,0],l4mu[:,1])
-        plt.plot(l4mu[:,0],Parabola(l4mu[:,0],p[0],p[1],p[2]))
+        plt.plot(l4mu[:,0],Parabola(l4mu[:,0],p[0],p[1],p[2]),label='Simulating particle l2mu')
     return p[0]
 def GetLambda(Mc=0,q0=0,check=False,Parameter = None,Nodes=[0,1]):
     # Computation variables
@@ -107,15 +106,14 @@ def GetLambda(Mc=0,q0=0,check=False,Parameter = None,Nodes=[0,1]):
             E = Sys.AffineDeformation(uxxmin,-uxxmin,Nodes)
         else :
             E = Sys.AffineDeformation(du, -du,Nodes)
-        l.append([uxx,(E-E0) / V])
+        l.append([uxx,E])
     l = np.array(l)
     p, conv = curve_fit(Parabola, l[:, 0], l[:, 1], p0=[0, 0, 0])
     if check:
-        fig = plt.figure(figsize=(8,6))
         print(p)
         plt.plot(l[:,0],l[:,1],c='none')
         plt.scatter(l[:,0],l[:,1])
-        plt.plot(l[:,0],Parabola(l[:,0],p[0],p[1],p[2]))
+        plt.plot(l[:,0],Parabola(l[:,0],p[0],p[1],p[2]),label='Simulating particle lambda')
     return p[0]
 
 def ComputePoissonRatio(Mc=0,q0=0,check=False,Parameter=None,Nodes=[0,1]):
@@ -123,7 +121,7 @@ def ComputePoissonRatio(Mc=0,q0=0,check=False,Parameter=None,Nodes=[0,1]):
     Lambda = GetLambda(Mc,q0,check,Parameter,Nodes)
     L = 0.5*(L4MU-Lambda)
     return L/(L4MU-L)
-def compute_decoupled_nu(Mc,rho0,triangle='both'):
+def compute_decoupled_nu(Mc,rho0,**kwargs):
     # This function measure the Poisson ratio of one of the two triangles
     # in the hexagonal particle. Taking a coupling matrix Mc, and a rest
     # configuration rho0 (rho0 corresponds to the 9 length) we construct
@@ -132,6 +130,9 @@ def compute_decoupled_nu(Mc,rho0,triangle='both'):
     # apply volumic, then pure shear deformation to measure nu. The def-
     # -formation is applied to the nodes position, and we compute the
     # length to get the energy accordingly.
+    # Convert the length index from the Mert convention (see mapping of RandomParticleFunctions_v4)
+    # To my mapping, see Thesis/
+    IndexConversion = np.array([0,2,4,1,3,5,6,7,8])
     qregular = np.array([(1)/(2*3**0.5),
                    (1)/2.,
                    -(1)/(2*3**0.5),
@@ -144,26 +145,52 @@ def compute_decoupled_nu(Mc,rho0,triangle='both'):
                    -(1)/2,
                    (1)/(3**0.5),
                    0.])
-    if triangle == 'small':
-        Mreduced = Mc[3:6,3:6]
-        rho0reduced = rho0[3:6]
-        qregular_reduced = qregular[[2,3,6,7,10,11]]
-    elif triangle=='big':
-        Mreduced = Mc[0:3,0:3]
-        rho0reduced = rho0[0:3]
-        qregular_reduced = qregular[[0,1,4,5,8,9]]
-    elif triangle=='both':
-        Mreduced = Mc[0:6,0:6]
-        rho0reduced = rho0[0:6]
-        qregular_reduced = qregular[[0,1,4,5,8,9,2,3,6,7,10,11]]
+    if kwargs.get('triangle') == 'small':
+        Mreduced = np.array([[Mc[j,i] for i in IndexConversion[3:6]] for j in IndexConversion[3:6]])
+        rho0reduced = rho0[IndexConversion[3:6]]
+        #qregular_reduced = qregular[[2,3,6,7,10,11]]
+    elif kwargs.get('triangle')=='big':
+        Mreduced = np.array([[Mc[i,j] for i in IndexConversion[0:3]] for j in IndexConversion[0:3]])
+        #Mreduced = Mc[0:3,0:3]
+        rho0reduced = rho0[IndexConversion[0:3]]
+        #qregular_reduced = qregular[[0,1,4,5,8,9]]
+    elif kwargs.get('triangle')=='both':
+        Mreduced = np.array([[Mc[j,i] for i in IndexConversion[0:6]] for j in IndexConversion[0:6]])
+        #Mreduced = Mc[0:6,0:6]
+        rho0reduced = rho0[IndexConversion[0:6]]
+        #qregular_reduced = qregular[[0,1,4,5,8,9,2,3,6,7,10,11]]
+    else :#triangle == 'all':
+        Mreduced = Mc
+        rho0reduced = rho0
+        #qregular_reduced = qregular
     #Measure dcoupled l2mu by applying a volumic deformation
-    L2MU = deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,1,1)
-    Lambda = deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,1,-1)
+    L2MU = deform_reduced_particle(Mreduced,qregular,rho0reduced,1,1,**kwargs)
+    Lambda = deform_reduced_particle(Mreduced,qregular,rho0reduced,1,-1,**kwargs)
     L = 0.5*(L2MU-Lambda)
     return L/(L2MU-L)
-def deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,SignOfuxx,SignOfuyy):
+def determine_local_coordinates(q,**kwargs):
+    if kwargs.get('triangle')=='small':
+        q = q[[2,3,6,7,10,11]]
+        rho = np.array([(q[2*i]-q[(2*(i+1))%6])**2+(q[2*i+1]-q[(2*(i+1))%6+1])**2 for i in range(3)])
+    elif kwargs.get('triangle')=='big':
+        q = q[[0,1,4,5,8,9]]
+        rho = np.array([(q[2*i]-q[(2*(i+1))%6])**2+(q[2*i+1]-q[(2*(i+1))%6+1])**2 for i in range(3)])
+    elif kwargs.get('triangle')=='both':
+        q = q[[0,1,4,5,8,9,2,3,6,7,10,11]]
+        rho = np.array([(q[:6][2*i]-q[:6][(2*(i+1))%6])**2+(q[:6][2*i+1]-q[:6][(2*(i+1))%6+1])**2 for i in range(3)])
+        rho = np.append(rho,np.array([(q[6:][2*i]-q[6:][(2*(i+1))%6])**2+(q[6:][2*i+1]-q[6:][(2*(i+1))%6+1])**2 for i in range(3)]))
+    else:
+        mapping = np.array([[0, 2, 4, 6, 8,10, 0, 4, 8],
+                            [4, 6, 8,10, 0, 2, 2, 6,10]])
+        rho = np.zeros(9)
+        for ind_i in range(9):
+            ind_1 = mapping[0, ind_i]
+            ind_2 = mapping[1, ind_i]
+            rho[ind_i] = (q[ind_1] - q[ind_2])**2+ (q[ind_1+1] - q[ind_2+1])**2
+    return rho
+def deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,SignOfuxx,SignOfuyy,**kwargs):
     def E(Mc,rho,rho0):
-        return np.dot((rho-rho0),np.dot(Mc,rho-rho0))
+        return 0.5*np.dot((rho/rho0-rho0)/2.,np.dot(Mc,(rho/rho0-rho0)/2.))
     energy_list = np.zeros((NPoints,2))
     for n,uxx in enumerate(np.linspace(uxxmin,uxxmax,NPoints)):
         # apply the deformation to the Nodes
@@ -171,20 +198,12 @@ def deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,SignOfuxx,Sign
         q_deformed[0::2] = qregular_reduced[0::2] * (1+uxx*SignOfuxx)
         q_deformed[1::2] = qregular_reduced[1::2] * (1+uxx*SignOfuyy)
         #compute the associated Length
-        if q_deformed.shape[0]//2 == 3:
-            Nnodes = q_deformed.shape[0]//2
-            rho_deformed = np.array([np.sqrt((q_deformed[2*(i%Nnodes)]-q_deformed[2*((i+1)%Nnodes)])**2+
-                                            (q_deformed[2*(i%Nnodes)+1]-q_deformed[2*((i+1)%Nnodes)+1])**2)
-                                            for i in range(Nnodes)])
-        else:
-            rho_deformed = np.zeros(6,dtype=float)
-            Nnodes = q_deformed.shape[0]//4
-            rho_deformed[:3] = np.array([np.sqrt((q_deformed[2*(i%Nnodes)]-q_deformed[2*((i+1)%Nnodes)])**2+
-                                            (q_deformed[2*(i%Nnodes)+1]-q_deformed[2*((i+1)%Nnodes)+1])**2)
-                                            for i in range(Nnodes)])
-            rho_deformed[3:] = np.array([np.sqrt((q_deformed[2*(i%Nnodes+Nnodes)]-q_deformed[2*((i+1)%Nnodes+Nnodes)])**2+
-                                            (q_deformed[2*(i%Nnodes+Nnodes)+1]-q_deformed[2*((i+1)%Nnodes+Nnodes)+1])**2)
-                                            for i in range(Nnodes)])
+        rho_deformed = determine_local_coordinates(q_deformed,**kwargs)
         energy_list[n] = [uxx,E(Mreduced,rho_deformed,rho0reduced)]
-    P, conv = curve_fit(Parabola, energy_list[:, 0], energy_list[:, 1], p0=[0, 0, 0])
-    return P[0]
+    p, conv = curve_fit(Parabola, energy_list[:, 0], energy_list[:, 1], p0=[0, 0, 0])
+    if kwargs.get('check'):
+        print(p)
+        plt.plot(energy_list[:,0],energy_list[:,1],c='none')
+        plt.scatter(energy_list[:,0],energy_list[:,1])
+        plt.plot(energy_list[:,0],Parabola(energy_list[:,0],p[0],p[1],p[2]),label='using matrix'+str(SignOfuxx*SignOfuyy))
+    return p[0]
