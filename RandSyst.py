@@ -268,6 +268,14 @@ class System:
             self.lib.OutputSystemSiteExtended(self.Adress, Name.encode('utf-8'))
         else:
             self.lib.OutputSystemSite(self.Adress, Name.encode('utf-8'))
+    def get_sites_energy_as_array(self):
+        self.PrintPerSite('to_plot.txt',Extended=True)
+        Data = np.loadtxt('to_plot.txt')
+        os.system('rm to_plot.txt')
+        array_of_position = np.zeros(self.state.shape,dtype=float)
+        for site in Data:
+            array_of_position[int(site[-2]),int(site[-1])] = site[-3]
+        return array_of_position
     def get_sites_position_as_array(self):
         self.PrintPerSite('to_plot.txt',Extended=True)
         Data = np.loadtxt('to_plot.txt')

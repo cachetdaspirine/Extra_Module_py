@@ -6,6 +6,7 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import copy
 import Shape as Sh
+import pathlib
 from MC import *
 
 def Parabola(x,a,b,c):
@@ -132,42 +133,65 @@ def compute_decoupled_nu(Mc,rho0,**kwargs):
     # length to get the energy accordingly.
     # Convert the length index from the Mert convention (see mapping of RandomParticleFunctions_v4)
     # To my mapping, see Thesis/
-    IndexConversion = np.array([0,2,4,1,3,5,6,7,8])
-    qregular = np.array([(1)/(2*3**0.5),
-                   (1)/2.,
-                   -(1)/(2*3**0.5),
-                   (1)/2.,
-                   -(1)/3**0.5,
-                   0.,
-                   -(1)/(2*3**0.5),
-                   -(1)/2.,
-                   (1)/(2*3**0.5),
-                   -(1)/2,
-                   (1)/(3**0.5),
-                   0.])
-    if kwargs.get('triangle') == 'small':
-        Mreduced = np.array([[Mc[j,i] for i in IndexConversion[3:6]] for j in IndexConversion[3:6]])
-        rho0reduced = rho0[IndexConversion[3:6]]
-        #qregular_reduced = qregular[[2,3,6,7,10,11]]
-    elif kwargs.get('triangle')=='big':
-        Mreduced = np.array([[Mc[i,j] for i in IndexConversion[0:3]] for j in IndexConversion[0:3]])
-        #Mreduced = Mc[0:3,0:3]
-        rho0reduced = rho0[IndexConversion[0:3]]
-        #qregular_reduced = qregular[[0,1,4,5,8,9]]
-    elif kwargs.get('triangle')=='both':
-        Mreduced = np.array([[Mc[j,i] for i in IndexConversion[0:6]] for j in IndexConversion[0:6]])
-        #Mreduced = Mc[0:6,0:6]
-        rho0reduced = rho0[IndexConversion[0:6]]
-        #qregular_reduced = qregular[[0,1,4,5,8,9,2,3,6,7,10,11]]
-    else :#triangle == 'all':
-        Mreduced = Mc
-        rho0reduced = rho0
+
         #qregular_reduced = qregular
     #Measure dcoupled l2mu by applying a volumic deformation
-    L2MU = deform_reduced_particle(Mreduced,qregular,rho0reduced,1,1,**kwargs)
-    Lambda = deform_reduced_particle(Mreduced,qregular,rho0reduced,1,-1,**kwargs)
+    Mreduced,rho0reduced = reduce_coordinates(Mc,rho0,**kwargs)
+    ux = np.array([1 for _ in range(6)])
+    uy = np.array([1 for _ in range(6)])
+    L2MU = deform_reduced_particle(Mreduced,qregular,rho0reduced,ux,uy,**kwargs)
+    Lambda = deform_reduced_particle(Mreduced,qregular,rho0reduced,ux,-uy,**kwargs)
     L = 0.5*(L2MU-Lambda)
     return L/(L2MU-L)
+def reduce_coordinates(Mc,rho0,**kwargs):
+        IndexConversion = np.array([0,2,4,1,3,5,6,7,8])
+        qregular = np.array([1/(2*3**.5),.5,-1/(2*3**.5),.5,-1/3**.5,0,-1/(2*3**0.5),-.5,1/(2*3**.5),-.5,1/(3**.5),0])
+        if kwargs.get('triangle') == 'small':
+            Mreduced = np.array([[Mc[j,i] for i in IndexConversion[3:6]] for j in IndexConversion[3:6]])
+            rho0reduced = rho0[IndexConversion[3:6]]
+            #qregular_reduced = qregular[[2,3,6,7,10,11]]
+        elif kwargs.get('triangle')=='big':
+            Mreduced = np.array([[Mc[i,j] for i in IndexConversion[0:3]] for j in IndexConversion[0:3]])
+            #Mreduced = Mc[0:3,0:3]
+            rho0reduced = rho0[IndexConversion[0:3]]
+            #qregular_reduced = qregular[[0,1,4,5,8,9]]
+        elif kwargs.get('triangle')=='both':
+            Mreduced = np.array([[Mc[j,i] for i in IndexConversion[0:6]] for j in IndexConversion[0:6]])
+            #Mreduced = Mc[0:6,0:6]
+            rho0reduced = rho0[IndexConversion[0:6]]
+            #qregular_reduced = qregular[[0,1,4,5,8,9,2,3,6,7,10,11]]
+        else :#triangle == 'all':
+            Mreduced = Mc
+            rho0reduced = rho0
+        return Mreduced,rho0reduced
+def compute_stiffness_ratio(Mc,rho0,**kwargs):
+    ux_fiber = np.load(str(pathlib.Path(__file__).parent.absolute())+'/ux_fiber.npy')
+    uy_fiber = np.load(str(pathlib.Path(__file__).parent.absolute())+'/uy_fiber.npy')
+    qregular = np.array([1/(2*3**.5),.5,-1/(2*3**.5),.5,-1/3**.5,0,-1/(2*3**0.5),-.5,1/(2*3**.5),-.5,1/(3**.5),0])
+    if kwargs.get('eps'):
+        eps=kwargs.get('eps')
+    elif  kwargs.get('epsilon'):
+        eps=kwargs.get('epsilon')
+    else:
+        eps=0.01
+    q0 = get_Mc(eps=eps)[1]
+    ux_bulk = qregular[0::2]-q0[0::2]
+    uy_bulk = qregular[1::2]-q0[1::2]
+    # if kwargs.get('triangle')=='small':
+    #     ux_fiber = ux_fiber[[0,2,4]]
+    #     uy_fiber = uy_fiber[[0,2,4]]
+    #     ux_bulk = ux_bulk[[0,2,4]]
+    #     uy_bulk = uy_bulk[[0,2,4]]
+    # elif kwargs.get('triangle')=='big':
+    #     ux_fiber = ux_fiber[[1,3,5]]
+    #     uy_fiber = uy_fiber[[1,3,5]]
+    #     ux_bulk = ux_bulk[[1,3,5]]
+    #     uy_bulk = uy_bulk[[1,3,5]]
+    ux_bulk,uy_bulk = ux_bulk/np.linalg.norm(ux_bulk),uy_bulk/np.linalg.norm(uy_bulk)
+    Mreduced,rho0reduced = reduce_coordinates(Mc,rho0,**kwargs)
+    return 0.5*deform_reduced_particle(Mreduced,qregular,rho0reduced,ux_bulk,uy_bulk,**kwargs)/deform_reduced_particle(Mreduced,qregular,rho0reduced,ux_fiber,uy_fiber,**kwargs)
+
+
 def determine_local_coordinates(q,**kwargs):
     if kwargs.get('triangle')=='small':
         q = q[[2,3,6,7,10,11]]
@@ -188,18 +212,19 @@ def determine_local_coordinates(q,**kwargs):
             ind_2 = mapping[1, ind_i]
             rho[ind_i] = (q[ind_1] - q[ind_2])**2+ (q[ind_1+1] - q[ind_2+1])**2
     return rho
-def deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,SignOfuxx,SignOfuyy,**kwargs):
+def deform_reduced_particle(Mreduced,qregular_reduced,rho0reduced,ux,uy,**kwargs):
     def E(Mc,rho,rho0):
         return 0.5*np.dot((rho/rho0-rho0)/2.,np.dot(Mc,(rho/rho0-rho0)/2.))
     energy_list = np.zeros((NPoints,2))
-    for n,uxx in enumerate(np.linspace(uxxmin,uxxmax,NPoints)):
+    for n,amplitude in enumerate(np.linspace(uxxmin,uxxmax,NPoints)):
         # apply the deformation to the Nodes
         q_deformed = copy.copy(qregular_reduced)
-        q_deformed[0::2] = qregular_reduced[0::2] * (1+uxx*SignOfuxx)
-        q_deformed[1::2] = qregular_reduced[1::2] * (1+uxx*SignOfuyy)
+        for i in range(ux.shape[0]):
+            q_deformed[2*i] = qregular_reduced[2*i] * (1+ux[i]*amplitude)
+            q_deformed[2*i+1] = qregular_reduced[2*i+1]*(1+uy[i]*amplitude)
         #compute the associated Length
         rho_deformed = determine_local_coordinates(q_deformed,**kwargs)
-        energy_list[n] = [uxx,E(Mreduced,rho_deformed,rho0reduced)]
+        energy_list[n] = [amplitude,E(Mreduced,rho_deformed,rho0reduced)]
     p, conv = curve_fit(Parabola, energy_list[:, 0], energy_list[:, 1], p0=[0, 0, 0])
     if kwargs.get('check'):
         print(p)
