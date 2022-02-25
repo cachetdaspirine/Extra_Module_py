@@ -157,7 +157,13 @@ class System:
         self.Energy = self.lib.GetSystemEnergy(self.Adress)
         self.MAP = cm
 
-
+    def PrintBinary(self):
+        # function that print the 0/1 array in the right order. So that there
+        # is a direct correspondance between 0/1 maps and the triangle
+        for j in reversed(range(self.state.shape[1])):
+            for i in range(self.state.shape[0]):
+                print(str(self.state[i, j]) + " ", end='')
+            print('\n', end='')
     def Copy(self, old_system):
         self.Lx = old_system.Lx
         self.Ly = old_system.Ly

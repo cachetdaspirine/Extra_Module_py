@@ -9,7 +9,9 @@ import math
 ########################################################
 
 ########################################################
-from mapping import *
+#from mapping import *
+mapping = np.array([[0, 2, 4, 6, 8,10, 0, 4, 8],\
+                    [4, 6, 8,10, 0, 2, 2, 6,10]])
 ########################################################
 
 ########################################################
@@ -30,19 +32,21 @@ def CalculateParticleEnergy(edge_coordinate, *args):
     ## Note that rho_vec is the square of the lengths
     ## and rho0_vec is rest lengths, not squared.
     ##
-    eta_vec = np.zeros(9)        
-    for ind_i in range(9):
-        eta_vec[ind_i] = (rho_vec[ind_i]/rho0_vec[ind_i] \
-                          - rho0_vec[ind_i])\
-                          /(2.0)        
+    # eta_vec = np.zeros(9)
+    # for ind_i in range(9):
+    #     eta_vec[ind_i] = (rho_vec[ind_i]/rho0_vec[ind_i] \
+    #                       - rho0_vec[ind_i])\
+    #                       /(2.0)
+    eta_vec = (rho_vec/rho0_vec -rho0_vec)*0.5
     ##
-    energy_t = 0.0
-    for ind_i in range(9):
-        for ind_j in range(9):
-            energy_t = energy_t \
-                       + (1.0/2.0)*eta_vec[ind_i]*\
-                       M_ij[ind_i, ind_j]*\
-                       eta_vec[ind_j]
+    # energy_t = 0.0
+    # for ind_i in range(9):
+    #     for ind_j in range(9):
+    #         energy_t = energy_t \
+    #                    + (1.0/2.0)*eta_vec[ind_i]*\
+    #                    M_ij[ind_i, ind_j]*\
+    #                    eta_vec[ind_j]
+    energy_t = 0.5*np.dot(eta_vec,np.dot(M_ij,eta_vec))
     ##
     #########
     return energy_t
@@ -64,7 +68,7 @@ def EdgeCoordsToQVEC(edge_coordinate):
 ########################################################
 def DetermineLocalCoordinates(q_vec):
     ##
-    mapping = UseMapping()
+    #mapping = UseMapping()
     ##
     rho_vec = np.zeros(9)
     for ind_i in range(9):
@@ -83,10 +87,10 @@ def DetermineLocalCoordinates(q_vec):
 def ForcesUnit(edge_coordinate, *args):
     ###############
     (M_ij, rho0_vec)= args
-    ###############    
+    ###############
     force_unit_temp = np.zeros([6, 2])
     ##
-    mapping = UseMapping()
+    #mapping = UseMapping()
     ##
     q_vec = EdgeCoordsToQVEC(edge_coordinate)
     ##
@@ -95,43 +99,44 @@ def ForcesUnit(edge_coordinate, *args):
         ind1 = mapping[0, ind_i]
         ind2 = mapping[1, ind_i]
         ##
-        DqDeta_ij[ind_i, ind1] = DqDeta_ij[ind_i, ind1] \
-                                 + (q_vec[ind1]-q_vec[ind2])\
-                                 /rho0_vec[ind_i]
-        ##        
-        DqDeta_ij[ind_i, ind2] = DqDeta_ij[ind_i, ind2] \
-                                 - (q_vec[ind1]-q_vec[ind2])\
-                                 /rho0_vec[ind_i]
+        DqDeta_ij[ind_i, ind1] += (q_vec[ind1]-q_vec[ind2])\
+                                    /rho0_vec[ind_i]
+
         ##
-        DqDeta_ij[ind_i, ind1+1] = DqDeta_ij[ind_i, ind1+1] \
-                                   + (q_vec[ind1+1]-q_vec[ind2+1])\
+        DqDeta_ij[ind_i, ind2] += -(q_vec[ind1]-q_vec[ind2])\
+                                    /rho0_vec[ind_i]
+        ##
+        DqDeta_ij[ind_i, ind1+1] +=(q_vec[ind1+1]-q_vec[ind2+1])\
                                    /rho0_vec[ind_i]
-        ##        
-        DqDeta_ij[ind_i, ind2+1] = DqDeta_ij[ind_i, ind2+1] \
-                                   - (q_vec[ind1+1]-q_vec[ind2+1])\
-                                   /rho0_vec[ind_i]
+        ##
+        DqDeta_ij[ind_i, ind2+1] = - (q_vec[ind1+1]-q_vec[ind2+1])\
+                                    /rho0_vec[ind_i]
+
     ###############
-    rho_vec = DetermineLocalCoordinates(q_vec)  
+    rho_vec = DetermineLocalCoordinates(q_vec)
     ####
-    eta_vec = np.zeros(9)        
-    for ind_i in range(9):
-        eta_vec[ind_i] = (rho_vec[ind_i]/rho0_vec[ind_i] \
-                          - rho0_vec[ind_i])\
-                          /(2.0)   
-    Dq_vec = np.zeros(12)
-    for ind_i in range(12):
-        for ind_j in range(9):
-            for ind_k in range(9):
-                Dq_vec[ind_i] = Dq_vec[ind_i] \
-                                + DqDeta_ij[ind_j, ind_i] \
-                                * M_ij[ind_j, ind_k] \
-                                * eta_vec[ind_k]
+    # eta_vec = np.zeros(9)
+    # for ind_i in range(9):
+    #     eta_vec[ind_i] = (rho_vec[ind_i]/rho0_vec[ind_i] \
+    #                       - rho0_vec[ind_i])\
+    #                       /(2.0)
+    eta_vec = 0.5*(rho_vec/rho0_vec - rho0_vec)
+
+    # Dq_vec = np.zeros(12)
+    # for ind_i in range(12):
+    #     for ind_j in range(9):
+    #         for ind_k in range(9):
+    #             Dq_vec[ind_i] = Dq_vec[ind_i] \
+    #                             + DqDeta_ij[ind_j, ind_i] \
+    #                             * M_ij[ind_j, ind_k] \
+    #                             * eta_vec[ind_k]
+    Dq_vec = np.dot(DqDeta_ij.T,np.dot(M_ij,eta_vec))
     ######################
-    dforce = np.zeros([6, 2])
-    for ind_q in range(6):
-        dforce[ind_q, 0] = Dq_vec[2*ind_q]
-        dforce[ind_q, 1] = Dq_vec[2*ind_q + 1]
-    return (dforce)
+    #dforce = np.zeros([6, 2])
+    #for ind_q in range(6):
+    #    dforce[ind_q, 0] = Dq_vec[2*ind_q]
+    #    dforce[ind_q, 1] = Dq_vec[2*ind_q + 1]
+    return np.array([Dq_vec[0::2],Dq_vec[1::2]]).T
 ########################################################
 ########################################################
 

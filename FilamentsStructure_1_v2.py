@@ -394,7 +394,11 @@ def get_E_along_width(width,*args):
     if not res.success:
         print(res.message)
     #res_min = res[0]
+    #if zero_curvature == True:
+    #    res.x[-1] = 0
     E = compute_energy_along_width(res.x, *args)
+    #if full==True:
+    #    return E
     if E.shape[0]%2 == 0:
         return np.mean([E[:E.shape[0]//2],np.flip(E[E.shape[0]//2:])],axis=0)
     else:
