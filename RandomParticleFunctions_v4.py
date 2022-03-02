@@ -14,7 +14,7 @@ from scipy.optimize import brentq
 ########################################################
 ########################################################
 ########################################################
-def RandomParticle(seed=None,distribution='gaussian',eps1=0.01,eps2=0.):
+def RandomParticle(seed=None,distribution='gaussian',eps1=0.01,eps2=0.,sigma=1.):
     if not seed:
         #np.random.seed(seed)
         seed = np.random.randint(0,10000000000)
@@ -23,7 +23,7 @@ def RandomParticle(seed=None,distribution='gaussian',eps1=0.01,eps2=0.):
         rng = np.random.default_rng(seed)
     #else :
     #    seed = np.random.randint(0,10000000000)
-    Mc,rho0,eps1,eps2 = RandomMatrix(rng = rng,distribution=distribution,n_t=0,eps1=eps1,eps2=eps2)
+    Mc,rho0,eps1,eps2 = RandomMatrix(rng = rng,distribution=distribution,n_t=0,eps1=eps1,eps2=eps2,sigma=sigma)
     #Mc2 = RandomMatrix(np.random.randint(0,10000000))[0]
     #Mc2 = np.zeros((9,9),dtype=float)
     #Mc2[3,4],Mc2[3,5],Mc2[4,5]=1.,1.,1.
@@ -61,7 +61,7 @@ def GetInterval(Mc1,Mc2,resolution):
             Pmax = P-resolution # return the step before
             break
     return 0.,Pmax
-def RandomMatrix(rng=None,distribution='gaussian',n_t = 2,eps1=0.01,eps2=0.):
+def RandomMatrix(rng=None,distribution='gaussian',n_t = 2,eps1=0.01,eps2=0.,mean=0.,sigma=1.):
     #n_t=2
     ##########################
     if not rng:
@@ -69,11 +69,13 @@ def RandomMatrix(rng=None,distribution='gaussian',n_t = 2,eps1=0.01,eps2=0.):
         rng = np.random.default_rng()
     ## Random matrix
     if distribution=='uniform'or distribution == 'Uniform':
-        m_ij = 2*rng.rand(9,9)-np.full((9,9),1)
+        #m_ij = 2*rng.rand(9,9)-np.full((9,9),1)
+        m_ij = rng.uniform(-1,1,size=(9,9))
     elif distribution=='exponential' or distribution=='exp':
         m_ij = rng.exponential(3.,(9,9))
-    if distribution == 'gaussian' or distribution == 'Gaussian':
-        m_ij = rng.normal(size=(9,9))
+        print(distribution)
+    elif distribution == 'gaussian' or distribution == 'Gaussian':
+        m_ij = rng.normal(mean,sigma,size=(9,9))
     ##########################
     #for ind_i in range(9):
     #    m_ij[ind_i, ind_i] = m_ij[ind_i, ind_i] + n_t

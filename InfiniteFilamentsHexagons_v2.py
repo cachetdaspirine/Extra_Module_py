@@ -55,6 +55,6 @@ def DetermineInfiniFilamentEnergy(M_ij, rho0_vec, J_surface, width_max):
 
         #print(ind_w, energy_1_list[ind_w-1])#, energy_2_list[ind_w-1])
         ###
-    return (width_list, energy_1_list)#, energy_2_list, BulkE)
+    return (width_list, energy_1_list, BulkE)#, energy_2_list, BulkE)
 ########################################################
 ########################################################

@@ -10,6 +10,9 @@ from InfiniteFilamentsTriangles_v1 import *
 
 import InfiniteFilamentsTriangles_v1 as T
 import InfiniteFilamentsHexagons_v1 as H
+import InfiniteFilamentsHexagons_v2 as H2
+
+
 
 def line(x,a,b):
     return a*x+b
@@ -22,7 +25,10 @@ class BF:
         self.Mc = Mc
         self.q0 = q0
         #self.Aspect = np.array([1./10.,1./50.,0.01])
-        if not self.Expansion:
+        if type(Mc) == np.ndarray:
+            self.width_list,self.energy_list1 , BulkE = \
+                    H2.DetermineInfiniFilamentEnergy(Mc,q0,0,WidthMax)
+        else:
             if P.ParticleType == 'Triangle':
                 self.width_list, self.energy_list, BulkE = \
                         T.DetermineInfiniFilamentEnergy(P.k, P.k, P.kc, \
@@ -35,6 +41,7 @@ class BF:
                                                         P.kA, P.kA2, \
                                                         1., \
                                                         P.epsilon, 0., WidthMax)
+
         self.Systems = np.array([np.empty(3,dtype=object) for w in range(0,WidthMax,1)])
     def Np(self,W,L,P):
         if P.ParticleType=='Hexagon':
@@ -88,10 +95,10 @@ class BF:
             return self.energy_list[w-1]+P.J/w
         elif P.ParticleType == 'Hexagon':
             if type == 1:
-                if self.Expansion :
-                    return self.Get_Einf(w,P,type=type)#+4*P.J/w
-                else :
-                    return self.energy_list1[w-1]+4*P.J/w
+                #if self.Expansion :
+                    #return self.Get_Einf(w,P,type=type)#+4*P.J/w
+                #else :
+                return self.energy_list1[w-1]+4*P.J/w
             elif type ==2:
                 if self.Expansion :
                     return self.Get_Einf(w,P,type=type)#+4*P.J/w
